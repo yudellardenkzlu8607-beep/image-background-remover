@@ -28,37 +28,56 @@ export default function Home() {
     };
     reader.readAsDataURL(file);
 
-    // Send to API
+    // Send directly to Remove.bg API from browser
     setIsLoading(true);
     setProcessingProgress(10);
 
     try {
+      // Convert file to base64
+      const base64Promise = new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      const base64Data = await base64Promise;
+      // Remove the data URL prefix (e.g., "data:image/png;base64,")
+      const base64Image = base64Data.split(',')[1];
+
+      setProcessingProgress(20);
+
+      // Call Remove.bg API directly
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("image_file", file);
+      formData.append("size", "auto");
 
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setProcessingProgress((prev) => Math.min(prev + 5, 80));
-      }, 500);
-
-      const response = await fetch("/api/remove-bg", {
+      const response = await fetch("https://api.remove.bg/v1.0/removebg", {
         method: "POST",
+        headers: {
+          "X-Api-Key": "42d1MGCDgUDGeMtCKg3pPRYk",
+        },
         body: formData,
       });
 
-      clearInterval(progressInterval);
-      setProcessingProgress(90);
+      setProcessingProgress(80);
 
       if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Failed to process image");
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to remove background");
       }
 
-      const data = await response.json();
+      // Convert response to blob and then to base64
+      const blob = await response.blob();
+      const resultBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+
       setProcessingProgress(100);
-      setResultImage(data.result);
+      setResultImage(resultBase64);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      console.error("Error processing image:", err);
+      setError(err instanceof Error ? err.message : "Failed to process image");
     } finally {
       setIsLoading(false);
     }
