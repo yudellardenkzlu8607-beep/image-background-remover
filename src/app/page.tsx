@@ -28,42 +28,37 @@ export default function Home() {
     };
     reader.readAsDataURL(file);
 
-    // Process locally with imgly
+    // Send to API
     setIsLoading(true);
     setProcessingProgress(10);
 
     try {
-      setProcessingProgress(20);
-      
-      // Dynamic import - load the library in browser
-      const { removeBackground } = await import("@imgly/background-removal");
-      
-      // Process image locally in browser - much faster!
-      const blob = await removeBackground(file, {
-        progress: (key, current, total) => {
-          // Map progress to 20-90%
-          const progress = 20 + Math.round((current / total) * 70);
-          setProcessingProgress(progress);
-        },
+      const formData = new FormData();
+      formData.append("image", file);
+
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setProcessingProgress((prev) => Math.min(prev + 5, 80));
+      }, 500);
+
+      const response = await fetch("/api/remove-bg", {
+        method: "POST",
+        body: formData,
       });
 
+      clearInterval(progressInterval);
       setProcessingProgress(90);
 
-      // Convert blob to base64
-      const arrayBuffer = await blob.arrayBuffer();
-      const base64 = btoa(
-        new Uint8Array(arrayBuffer).reduce(
-          (data, byte) => data + String.fromCharCode(byte),
-          ""
-        )
-      );
-      const resultUrl = `data:image/png;base64,${base64}`;
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to process image");
+      }
 
+      const data = await response.json();
       setProcessingProgress(100);
-      setResultImage(resultUrl);
+      setResultImage(data.result);
     } catch (err) {
-      console.error("Error processing image:", err);
-      setError(err instanceof Error ? err.message : "Failed to process image");
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsLoading(false);
     }
@@ -202,12 +197,12 @@ export default function Home() {
                         </div>
                         <div className="spinner w-12 h-12 mx-auto mb-4"></div>
                         <p className="text-gray-400 animate-pulse-slow">
-                          {processingProgress < 30 ? "Loading model..." : 
-                           processingProgress < 60 ? "Processing image..." : 
+                          {processingProgress < 50 ? "Uploading image..." : 
+                           processingProgress < 80 ? "Removing background..." : 
                            "Finalizing..."}
                         </p>
                         <p className="text-gray-500 text-sm mt-2">
-                          Running locally in your browser
+                          This may take a few seconds
                         </p>
                       </div>
                     ) : resultImage ? (
@@ -252,7 +247,7 @@ export default function Home() {
 
         {/* Footer */}
         <p className="text-center text-gray-600 text-sm mt-8">
-          Powered by Imgly AI (Local Processing)
+          Powered by Remove.bg API
         </p>
       </div>
     </main>
