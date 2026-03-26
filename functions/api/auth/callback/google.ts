@@ -1,6 +1,5 @@
-export const runtime = 'edge';
-
-export async function GET(request: Request): Promise<Response> {
+export async function onRequestGet(context) {
+  const { request, env } = context;
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
@@ -12,8 +11,8 @@ export async function GET(request: Request): Promise<Response> {
     return new Response('Invalid request', { status: 400 });
   }
 
-  const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
-  const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+  const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID || '';
+  const GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET || '';
 
   const tokenUrl = 'https://oauth2.googleapis.com/token';
   const tokenResponse = await fetch(tokenUrl, {

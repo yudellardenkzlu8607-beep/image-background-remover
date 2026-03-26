@@ -1,6 +1,5 @@
-export const runtime = 'edge';
-
-export async function POST(request: Request) {
+export async function onRequestPost(context) {
+  const { request } = context;
   try {
     const formData = await request.formData();
     const image = formData.get('image') as File | null;

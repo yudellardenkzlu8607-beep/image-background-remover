@@ -1,9 +1,8 @@
-export const runtime = 'edge';
-
-export async function GET(request: Request): Promise<Response> {
+export async function onRequestGet(context) {
+  const { request, env } = context;
   const url = new URL(request.url);
-  const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
   
+  const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID || '';
   const state = crypto.randomUUID();
   
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -13,14 +12,11 @@ export async function GET(request: Request): Promise<Response> {
   authUrl.searchParams.set('scope', 'openid email profile');
   authUrl.searchParams.set('state', state);
   
-  const response = new Response(null, {
+  return new Response(null, {
     status: 302,
     headers: {
       Location: authUrl.toString(),
+      'Set-Cookie': `oauth_state=${state}; HttpOnly; Path=/; SameSite=Lax; Secure`,
     },
   });
-  
-  response.headers.append('Set-Cookie', `oauth_state=${state}; HttpOnly; Path=/; SameSite=Lax; Secure`);
-  
-  return response;
 }

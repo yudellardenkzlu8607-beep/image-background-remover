@@ -1,6 +1,5 @@
-export const runtime = 'edge';
-
-export async function GET(request: Request): Promise<Response> {
+export async function onRequestGet(context) {
+  const { request } = context;
   const cookieHeader = request.headers.get('Cookie');
   const sessionCookie = cookieHeader?.split('; ').find(c => c.startsWith('session='));
 

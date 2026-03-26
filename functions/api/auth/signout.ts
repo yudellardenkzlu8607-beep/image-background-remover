@@ -1,6 +1,4 @@
-export const runtime = 'edge';
-
-export async function POST(request: Request): Promise<Response> {
+export async function onRequestPost(context) {
   return new Response(null, {
     status: 302,
     headers: {
