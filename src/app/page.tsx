@@ -10,7 +10,10 @@ export default function Home() {
   const [result, setResult] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -24,13 +27,37 @@ export default function Home() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onload = () => setPreview(reader.result as string);
-      reader.readAsDataURL(file);
+    if (file) processFile(file);
+  };
+
+  const processFile = (file: File) => {
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPreview(reader.result as string);
       setResult(null);
-      setError(null);
+      setShowComparison(false);
+    };
+    reader.readAsDataURL(file);
+    setError(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      processFile(file);
     }
   };
 
@@ -122,14 +149,18 @@ export default function Home() {
       </div>
 
       {/* Upload and Process Area */}
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-4xl">
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-center mb-6">上传图片去除背景</h2>
           
           {!selectedImage ? (
             <div 
-              className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center cursor-pointer hover:border-gray-400 transition"
+              ref={dropZoneRef}
+              className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition ${isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'}`}
               onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
             >
               <svg className="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -146,20 +177,65 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Preview */}
-              <div className="relative">
-                <img 
-                  src={preview!} 
-                  alt="Preview" 
-                  className="max-h-64 mx-auto rounded-lg"
-                />
-                <button
-                  onClick={() => { setSelectedImage(null); setPreview(null); setResult(null); }}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600"
-                >
-                  ×
-                </button>
-              </div>
+              {/* Comparison View */}
+              {result && (
+                <div className="relative rounded-lg overflow-hidden" style={{ height: '300px' }}>
+                  <div className="absolute inset-0 flex">
+                    {/* Before */}
+                    <div className="flex-1 relative">
+                      <img src={preview!} alt="Before" className="absolute inset-0 w-full h-full object-contain bg-gray-100" />
+                      <span className="absolute top-2 left-2 bg-black/50 text-white px-2 py-1 text-sm rounded">原图</span>
+                    </div>
+                    {/* After */}
+                    <div className="flex-1 relative">
+                      <img src={result} alt="After" className="absolute inset-0 w-full h-full object-contain bg-gray-100" style={{ backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '20px 20px', backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px' }} />
+                      <span className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 text-sm rounded">去除背景</span>
+                    </div>
+                  </div>
+                  {/* Slider */}
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={showComparison ? 50 : 0}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const container = e.target.parentElement;
+                      const before = container?.querySelector('.flex-1:first-child') as HTMLElement;
+                      const after = container?.querySelector('.flex-1:last-child') as HTMLElement;
+                      if (before && after) {
+                        before.style.clipPath = `inset(0 ${100 - Number(value)}% 0 0)`;
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
+                    style={{ WebkitAppearance: 'none' }}
+                  />
+                  <div className="absolute inset-y-0 left-1/2 w-1 bg-white cursor-ew-resize transform -translate-x-1/2 shadow-lg">
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Preview (when no result) */}
+              {!result && (
+                <div className="relative">
+                  <img 
+                    src={preview!} 
+                    alt="Preview" 
+                    className="max-h-64 mx-auto rounded-lg"
+                  />
+                  <button
+                    onClick={() => { setSelectedImage(null); setPreview(null); setResult(null); }}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
 
               {/* Process Button */}
               <button
@@ -177,24 +253,24 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Result */}
+              {/* Download Button */}
               {result && (
-                <div className="space-y-3">
-                  <h3 className="font-semibold">处理结果：</h3>
-                  <img 
-                    src={result} 
-                    alt="Result" 
-                    className="max-h-64 mx-auto rounded-lg border"
-                  />
-                  <a
-                    href={result}
-                    download="removed-bg.png"
-                    className="block w-full py-3 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 transition"
-                  >
-                    下载结果图片
-                  </a>
-                </div>
+                <a
+                  href={result}
+                  download="removed-bg.png"
+                  className="block w-full py-3 bg-green-600 text-white text-center rounded-lg hover:bg-green-700 transition"
+                >
+                  下载结果图片
+                </a>
               )}
+
+              {/* Clear Button */}
+              <button
+                onClick={() => { setSelectedImage(null); setPreview(null); setResult(null); setError(null); }}
+                className="w-full py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition"
+              >
+                清除图片
+              </button>
             </div>
           )}
         </div>
