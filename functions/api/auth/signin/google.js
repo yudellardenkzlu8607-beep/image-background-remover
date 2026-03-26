@@ -11,6 +11,7 @@ export async function onRequestGet(context) {
   authUrl.searchParams.set('response_type', 'code');
   authUrl.searchParams.set('scope', 'openid email profile');
   authUrl.searchParams.set('state', state);
+  authUrl.searchParams.set('prompt', 'select_account');
   
   return new Response(null, {
     status: 302,
