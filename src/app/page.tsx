@@ -1,273 +1,83 @@
-"use client";
-
-import { useState, useRef, useCallback } from "react";
+import LoginButton from "@/components/LoginButton";
 
 export default function Home() {
-  const [originalImage, setOriginalImage] = useState<string | null>(null);
-  const [resultImage, setResultImage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [processingProgress, setProcessingProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const processImage = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      setError("Please upload an image file");
-      return;
-    }
-
-    setError(null);
-    setResultImage(null);
-    setProcessingProgress(0);
-
-    // Convert to base64 for preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setOriginalImage(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    // Send directly to Remove.bg API from browser
-    setIsLoading(true);
-    setProcessingProgress(10);
-
-    try {
-      // Convert file to base64
-      const base64Promise = new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-      const base64Data = await base64Promise;
-      // Remove the data URL prefix (e.g., "data:image/png;base64,")
-      const base64Image = base64Data.split(',')[1];
-
-      setProcessingProgress(20);
-
-      // Call Remove.bg API directly
-      const formData = new FormData();
-      formData.append("image_file", file);
-      formData.append("size", "auto");
-
-      const response = await fetch("https://api.remove.bg/v1.0/removebg", {
-        method: "POST",
-        headers: {
-          "X-Api-Key": "42d1MGCDgUDGeMtCKg3pPRYk",
-        },
-        body: formData,
-      });
-
-      setProcessingProgress(80);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to remove background");
-      }
-
-      // Convert response to blob and then to base64
-      const blob = await response.blob();
-      const resultBase64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-
-      setProcessingProgress(100);
-      setResultImage(resultBase64);
-    } catch (err) {
-      console.error("Error processing image:", err);
-      setError(err instanceof Error ? err.message : "Failed to process image");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file) processImage(file);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processImage(file);
-  };
-
-  const handleDownload = () => {
-    if (!resultImage) return;
-    const link = document.createElement("a");
-    link.href = resultImage;
-    link.download = "removed-background.png";
-    link.click();
-  };
-
-  const handleReset = () => {
-    setOriginalImage(null);
-    setResultImage(null);
-    setError(null);
-    setProcessingProgress(0);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
-      <div className="max-w-4xl w-full">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Image Background Remover
-          </h1>
-          <p className="text-gray-400 text-lg">
-            Upload an image to remove its background instantly
-          </p>
-        </div>
-
-        {/* Main Card */}
-        <div className="glass rounded-3xl p-8">
-          {!originalImage ? (
-            /* Upload Zone */
-            <div
-              className={`drop-zone rounded-2xl p-12 text-center cursor-pointer ${isDragOver ? "drag-over" : ""}`}
-              onDragOver={handleDragOver}
-              onDragEnter={(e) => { e.preventDefault(); setIsDragOver(true); }}
-              onDragLeave={() => setIsDragOver(false)}
-              onDrop={handleDrop}
-              onClick={triggerFileInput}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="mb-6">
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
-                  <svg
-                    className="w-10 h-10 text-purple-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <p className="text-xl text-gray-300 mb-2">
-                  Drag & drop your image here
-                </p>
-                <p className="text-gray-500">or click to browse</p>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                style={{ display: 'none' }}
-              />
-              <p className="text-sm text-gray-600 mt-4">
-                Supports PNG, JPG, WEBP
-              </p>
-            </div>
-          ) : (
-            /* Preview Zone */
-            <div>
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                {/* Original */}
-                <div>
-                  <p className="text-sm text-gray-400 mb-3 uppercase tracking-wide">
-                    Original
-                  </p>
-                  <div className="relative rounded-2xl overflow-hidden bg-black/30">
-                    <img
-                      src={originalImage}
-                      alt="Original"
-                      className="w-full h-auto"
-                    />
-                  </div>
-                </div>
-
-                {/* Result */}
-                <div>
-                  <p className="text-sm text-gray-400 mb-3 uppercase tracking-wide">
-                    Result
-                  </p>
-                  <div className="relative rounded-2xl overflow-hidden bg-black/30 min-h-[200px] flex items-center justify-center">
-                    {isLoading ? (
-                      <div className="text-center py-12 w-full">
-                        {/* Progress Bar */}
-                        <div className="w-full max-w-[200px] mx-auto mb-6">
-                          <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300"
-                              style={{ width: `${processingProgress}%` }}
-                            />
-                          </div>
-                        </div>
-                        <div className="spinner w-12 h-12 mx-auto mb-4"></div>
-                        <p className="text-gray-400 animate-pulse-slow">
-                          {processingProgress < 50 ? "Uploading image..." : 
-                           processingProgress < 80 ? "Removing background..." : 
-                           "Finalizing..."}
-                        </p>
-                        <p className="text-gray-500 text-sm mt-2">
-                          This may take a few seconds
-                        </p>
-                      </div>
-                    ) : resultImage ? (
-                      <img
-                        src={resultImage}
-                        alt="Result"
-                        className="w-full h-auto"
-                      />
-                    ) : error ? (
-                      <div className="text-center py-12 px-4">
-                        <p className="text-red-400 mb-2">⚠️ {error}</p>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {resultImage && (
-                  <button
-                    onClick={handleDownload}
-                    className="btn-primary px-8 py-3 rounded-xl font-semibold text-white"
-                  >
-                    📥 Download PNG
-                  </button>
-                )}
-                <button
-                  onClick={handleReset}
-                  className="px-8 py-3 rounded-xl font-semibold text-gray-300 hover:text-white transition-colors"
-                >
-                  🔄 Try Another
-                </button>
-              </div>
-            </div>
-          )}
-
-          {error && originalImage && !isLoading && (
-            <p className="text-red-400 text-center mt-4">{error}</p>
-          )}
-        </div>
-
-        {/* Footer */}
-        <p className="text-center text-gray-600 text-sm mt-8">
-          Powered by Remove.bg API
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
+        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+          欢迎使用图像背景去除工具
         </p>
+        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
+          <LoginButton />
+        </div>
+      </div>
+
+      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px]">
+        <h1 className="text-4xl font-bold text-center">
+          Image Background Remover
+        </h1>
+      </div>
+
+      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
+        <a
+          href="#"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            上传图片
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            支持 JPG、PNG 格式图片上传
+          </p>
+        </a>
+
+        <a
+          href="#"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            AI处理
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            智能识别并去除背景
+          </p>
+        </a>
+
+        <a
+          href="#"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            下载结果
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            获取透明背景 PNG 图片
+          </p>
+        </a>
+
+        <a
+          href="#"
+          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
+        >
+          <h2 className={`mb-3 text-2xl font-semibold`}>
+            登录记录
+            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
+              -&gt;
+            </span>
+          </h2>
+          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
+            查看您的登录历史记录
+          </p>
+        </a>
       </div>
     </main>
   );

@@ -1,44 +1,96 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f0f23;
-  --foreground: #ededed;
-  --accent: #8b5cf6;
-  --accent-hover: #7c3aed;
+  --background: #87CEEB;
+  --foreground: #2d2d2d;
+  --accent: #4a90a4;
+  --accent-hover: #3d7a8c;
+  --cloud: rgba(255, 255, 255, 0.9);
+  --grass: #7cb342;
+  --grass-light: #aed581;
 }
 
 body {
-  background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%);
+  /* 宫崎骏风格天空背景 */
+  background: linear-gradient(180deg, 
+    #87CEEB 0%, 
+    #b8e0f0 40%, 
+    #c9e4ca 70%, 
+    #7cb342 100%
+  );
   min-height: 100vh;
   color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: "Comic Sans MS", "Hiragino Kaku Gothic Pro", "Yu Gothic", "Meiryo", sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 宫崎骏风格云朵 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 10%;
+  left: 10%;
+  width: 200px;
+  height: 60px;
+  background: white;
+  border-radius: 100px;
+  opacity: 0.9;
+  box-shadow: 
+    80px 20px 0 20px white,
+    160px 10px 0 10px white,
+    250px 30px 0 15px white;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 25%;
+  right: 15%;
+  width: 150px;
+  height: 45px;
+  background: white;
+  border-radius: 100px;
+  opacity: 0.7;
+  box-shadow: 
+    60px 15px 0 15px white,
+    120px 8px 0 8px white;
+  z-index: 0;
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .drop-zone {
-  border: 2px dashed rgba(139, 92, 246, 0.5);
+  border: 3px dashed #4a90a4;
   transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .drop-zone:hover,
 .drop-zone.drag-over {
-  border-color: var(--accent);
-  background: rgba(139, 92, 246, 0.1);
+  border-color: #3d7a8c;
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(1.02);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent) 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #7cb342 0%, #558b2f 100%);
+  border: 2px solid #33691e;
   transition: all 0.3s ease;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(124, 179, 66, 0.5);
+  background: linear-gradient(135deg, #8bc34a 0%, #689f38 100%);
 }
 
 .btn-primary:disabled {
@@ -48,8 +100,8 @@ body {
 }
 
 .spinner {
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--accent);
+  border: 4px solid rgba(255, 255, 255, 0.5);
+  border-top-color: #7cb342;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -58,11 +110,57 @@ body {
   to { transform: rotate(360deg); }
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.6; }
 }
 
 .animate-pulse-slow {
   animation: pulse 2s ease-in-out infinite;
+}
+
+/* 草地装饰 */
+.grass-decoration {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(180deg, transparent 0%, #7cb342 30%, #558b2f 100%);
+  z-index: 0;
+}
+
+.grass-decoration::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20'%3E%3Cpath fill='%237cb342' d='M0 20 Q5 10 10 20 Q15 5 20 20 Q25 10 30 20 Q35 8 40 20 Q45 12 50 20 Q55 5 60 20 Q65 10 70 20 Q75 8 80 20 Q85 12 90 20 Q95 5 100 20 Z'/%3E%3C/svg%3E");
+  background-size: 100px 20px;
+  animation: grassWave 4s ease-in-out infinite;
+}
+
+@keyframes grassWave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-10px); }
+}
+
+/* 复古边框 */
+.vintage-border {
+  border: 4px solid #8b4513;
+  border-radius: 8px;
+  box-shadow: 
+    inset 0 0 0 2px #d2691e,
+    0 4px 8px rgba(0,0,0,0.2);
 }
