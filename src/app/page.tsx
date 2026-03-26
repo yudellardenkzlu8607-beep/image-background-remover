@@ -9,11 +9,10 @@ export default function Home() {
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [showComparison, setShowComparison] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -36,7 +35,6 @@ export default function Home() {
     reader.onload = () => {
       setPreview(reader.result as string);
       setResult(null);
-      setShowComparison(false);
     };
     reader.readAsDataURL(file);
     setError(null);
@@ -65,7 +63,19 @@ export default function Home() {
     if (!selectedImage) return;
     
     setProcessing(true);
+    setProgress(0);
     setError(null);
+    
+    // Animation effect
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 200);
     
     const formData = new FormData();
     formData.append('image', selectedImage);
@@ -78,15 +88,22 @@ export default function Home() {
       
       const data = await res.json();
       
+      clearInterval(progressInterval);
+      setProgress(100);
+      
       if (data.error) {
         setError(data.error);
       } else {
         setResult(data.result);
       }
     } catch (err) {
+      clearInterval(progressInterval);
       setError('处理图片时出错');
     } finally {
-      setProcessing(false);
+      setTimeout(() => {
+        setProcessing(false);
+        setProgress(0);
+      }, 500);
     }
   };
 
@@ -95,10 +112,18 @@ export default function Home() {
     window.location.href = '/';
   };
 
+  const handleClear = () => {
+    setSelectedImage(null);
+    setPreview(null);
+    setResult(null);
+    setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   if (status === 'loading') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-24">
-        <p>加载中...</p>
+        <div className="animate-pulse text-gray-500">加载中...</div>
       </main>
     );
   }
@@ -153,9 +178,21 @@ export default function Home() {
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-center mb-6">上传图片去除背景</h2>
           
+          {/* Return button when there's an image */}
+          {selectedImage && (
+            <button
+              onClick={handleClear}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 transition"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              返回上传
+            </button>
+          )}
+          
           {!selectedImage ? (
             <div 
-              ref={dropZoneRef}
               className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition ${isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'}`}
               onClick={() => fileInputRef.current?.click()}
               onDragOver={handleDragOver}
@@ -177,51 +214,66 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Comparison View */}
-              {result && (
-                <div className="relative rounded-lg overflow-hidden" style={{ height: '300px' }}>
-                  <div className="absolute inset-0 flex">
-                    {/* Before */}
-                    <div className="flex-1 relative">
-                      <img src={preview!} alt="Before" className="absolute inset-0 w-full h-full object-contain bg-gray-100" />
-                      <span className="absolute top-2 left-2 bg-black/50 text-white px-2 py-1 text-sm rounded">原图</span>
-                    </div>
-                    {/* After */}
-                    <div className="flex-1 relative">
-                      <img src={result} alt="After" className="absolute inset-0 w-full h-full object-contain bg-gray-100" style={{ backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)', backgroundSize: '20px 20px', backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px' }} />
-                      <span className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 text-sm rounded">去除背景</span>
+              {/* Processing Animation */}
+              {processing && (
+                <div className="relative h-64 rounded-lg overflow-hidden bg-gray-100">
+                  <img 
+                    src={preview!} 
+                    alt="Processing" 
+                    className="absolute inset-0 w-full h-full object-contain blur-sm"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <p className="text-white text-lg font-medium">AI 正在去除背景...</p>
+                      <p className="text-white/70 text-sm mt-2">{Math.round(progress)}%</p>
                     </div>
                   </div>
-                  {/* Slider */}
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={showComparison ? 50 : 0}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      const container = e.target.parentElement;
-                      const before = container?.querySelector('.flex-1:first-child') as HTMLElement;
-                      const after = container?.querySelector('.flex-1:last-child') as HTMLElement;
-                      if (before && after) {
-                        before.style.clipPath = `inset(0 ${100 - Number(value)}% 0 0)`;
-                      }
-                    }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
-                    style={{ WebkitAppearance: 'none' }}
-                  />
-                  <div className="absolute inset-y-0 left-1/2 w-1 bg-white cursor-ew-resize transform -translate-x-1/2 shadow-lg">
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                      </svg>
+                  {/* Progress bar */}
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-300">
+                    <div 
+                      className="h-full bg-indigo-500 transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Result with comparison */}
+              {result && !processing && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600 font-medium">处理完成！</span>
+                    <button
+                      onClick={() => setResult(null)}
+                      className="text-indigo-600 hover:text-indigo-800 text-sm"
+                    >
+                      重新处理
+                    </button>
+                  </div>
+                  
+                  {/* Comparison */}
+                  <div className="relative rounded-lg overflow-hidden border">
+                    <div className="flex">
+                      <div className="flex-1 relative">
+                        <img src={preview!} alt="原图" className="w-full h-auto" />
+                        <span className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 text-xs rounded">原图</span>
+                      </div>
+                      <div className="flex-1 relative" style={{ 
+                        backgroundImage: 'linear-gradient(45deg, #ddd 25%, transparent 25%), linear-gradient(-45deg, #ddd 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ddd 75%), linear-gradient(-45deg, transparent 75%, #ddd 75%)',
+                        backgroundSize: '20px 20px',
+                        backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                      }}>
+                        <img src={result} alt="结果" className="w-full h-auto" />
+                        <span className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 text-xs rounded">去除背景</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Preview (when no result) */}
-              {!result && (
+              {/* Preview when no result and not processing */}
+              {!result && !processing && (
                 <div className="relative">
                   <img 
                     src={preview!} 
@@ -229,7 +281,7 @@ export default function Home() {
                     className="max-h-64 mx-auto rounded-lg"
                   />
                   <button
-                    onClick={() => { setSelectedImage(null); setPreview(null); setResult(null); }}
+                    onClick={handleClear}
                     className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600"
                   >
                     ×
@@ -238,13 +290,14 @@ export default function Home() {
               )}
 
               {/* Process Button */}
-              <button
-                onClick={handleRemoveBg}
-                disabled={processing}
-                className="w-full py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition"
-              >
-                {processing ? '处理中...' : '去除背景'}
-              </button>
+              {!processing && (
+                <button
+                  onClick={handleRemoveBg}
+                  className="w-full py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                >
+                  去除背景
+                </button>
+              )}
 
               {/* Error */}
               {error && (
@@ -254,7 +307,7 @@ export default function Home() {
               )}
 
               {/* Download Button */}
-              {result && (
+              {result && !processing && (
                 <a
                   href={result}
                   download="removed-bg.png"
@@ -266,7 +319,7 @@ export default function Home() {
 
               {/* Clear Button */}
               <button
-                onClick={() => { setSelectedImage(null); setPreview(null); setResult(null); setError(null); }}
+                onClick={handleClear}
                 className="w-full py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition"
               >
                 清除图片
