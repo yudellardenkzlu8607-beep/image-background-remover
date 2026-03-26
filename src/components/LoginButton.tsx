@@ -1,10 +1,70 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
+
+interface Session {
+  user: {
+    name: string;
+    email: string;
+    image: string;
+  };
+  expires: number;
+}
+
 export default function LoginButton() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [status, setStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        setSession(data);
+        setStatus(data ? 'authenticated' : 'unauthenticated');
+      })
+      .catch(() => {
+        setStatus('unauthenticated');
+      });
+  }, []);
+
+  if (status === 'loading') {
+    return (
+      <button className="px-4 py-2 rounded-lg bg-gray-200 text-gray-600" disabled>
+        加载中...
+      </button>
+    );
+  }
+
+  if (session) {
+    return (
+      <div className="flex items-center gap-3">
+        {session.user?.image && (
+          <Image
+            src={session.user.image}
+            alt={session.user.name || 'User'}
+            width={32}
+            height={32}
+            className="rounded-full"
+          />
+        )}
+        <span className="text-sm text-gray-700">{session.user?.name}</span>
+        <form action="/api/auth/signout" method="POST">
+          <button
+            type="submit"
+            className="px-3 py-1 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+          >
+            退出登录
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <button
-      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition cursor-not-allowed opacity-60"
-      disabled
+      onClick={() => window.location.href = '/api/auth/signin/google'}
+      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
     >
       <svg className="w-5 h-5" viewBox="0 0 24 24">
         <path
@@ -24,7 +84,7 @@ export default function LoginButton() {
           d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
         />
       </svg>
-      使用 Google 登录（开发中）
+      使用 Google 登录
     </button>
   );
 }
