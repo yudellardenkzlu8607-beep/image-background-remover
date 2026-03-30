@@ -61,19 +61,6 @@ export default function Pricing() {
         if (data?.user?.email) setEmail(data.user.email);
       })
       .catch(console.error);
-    
-    // Scroll to section based on URL hash
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash;
-      if (hash === '#credits' || hash === '#subscription') {
-        setTimeout(() => {
-          const element = document.getElementById(hash.substring(1));
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, 100);
-      }
-    }
   }, []);
 
   const handleGetStarted = (item: any, type: string) => {
