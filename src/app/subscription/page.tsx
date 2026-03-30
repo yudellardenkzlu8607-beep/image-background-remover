@@ -75,15 +75,15 @@ export default function Subscription() {
       <div style={{ maxWidth: '768px', margin: '0 auto', padding: '48px 24px' }}>
         {/* Credits Section */}
         <div style={{ backgroundColor: hasSubscription ? '#f0fdf4' : '#eff6ff', border: `1px solid ${hasSubscription ? '#bbf7d0' : '#bfdbfe'}`, borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Credits Balance</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Credits</h2>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
             <div>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Current Balance</p>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Balance</p>
               <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.balance || 0}</p>
             </div>
             <div>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total Used</p>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Used</p>
               <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.totalUsed || 0}</p>
             </div>
             <div>
@@ -91,7 +91,7 @@ export default function Subscription() {
               <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.totalPurchased || 0}</p>
             </div>
             <div>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Bonus Received</p>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Bonus</p>
               <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.bonusReceived || 0}</p>
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function Subscription() {
           {hasSubscription && (
             <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ color: '#22c55e', fontSize: '16px' }}>✓</span>
-              <span style={{ fontSize: '14px', color: '#374151' }}>Unlimited mode active - no credits needed</span>
+              <span style={{ fontSize: '14px', color: '#374151' }}>Unlimited mode active</span>
             </div>
           )}
         </div>
@@ -111,10 +111,10 @@ export default function Subscription() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div>
                   <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                    Pro {subscription.plan === 'pro-yearly' ? 'Yearly' : 'Monthly'}
+                    Pro {subscription.plan === 'yearly' ? 'Yearly' : 'Monthly'}
                   </h2>
                   <p style={{ fontSize: '14px', color: '#6b7280' }}>
-                    {subscription.plan === 'pro-yearly' ? '$69/year' : '$10/month'}
+                    {subscription.plan === 'yearly' ? '$69/year' : '$10/month'}
                   </p>
                 </div>
                 <span style={{ backgroundColor: '#22c55e', color: 'white', padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: '500' }}>

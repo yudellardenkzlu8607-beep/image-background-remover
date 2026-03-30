@@ -8,55 +8,47 @@ const creditPackages = [
     id: 'starter',
     name: 'Starter',
     credits: 50,
-    price: 9,
-    pricePerCredit: 0.18,
-    tagline: 'Perfect for occasional use',
+    price: 5,
+    pricePerCredit: 0.10,
     popular: false,
   },
   {
-    id: 'pro',
-    name: 'Pro Pack',
+    id: 'professional',
+    name: 'Professional',
     credits: 200,
-    price: 29,
-    pricePerCredit: 0.145,
-    tagline: 'Best value for individuals',
+    price: 15,
+    pricePerCredit: 0.075,
     popular: true,
   },
   {
-    id: 'business',
-    name: 'Business',
+    id: 'enterprise',
+    name: 'Enterprise',
     credits: 500,
-    price: 59,
-    pricePerCredit: 0.118,
-    tagline: 'For teams and heavy users',
+    price: 39,
+    pricePerCredit: 0.078,
     popular: false,
   },
 ];
 
 const subscriptionPlans = [
   {
-    id: 'pro-monthly',
-    name: 'Pro Monthly',
-    credits: 'Unlimited',
+    id: 'monthly',
+    name: 'Monthly',
     price: 10,
     period: 'month',
-    tagline: 'Unlimited access, cancel anytime',
-    features: ['Unlimited photos', 'Priority processing', '24/7 support', 'Commercial license', 'API access'],
   },
   {
-    id: 'pro-yearly',
-    name: 'Pro Yearly',
-    credits: 'Unlimited',
+    id: 'yearly',
+    name: 'Yearly',
     price: 69,
     period: 'year',
-    tagline: 'Save 42% compared to monthly',
-    features: ['Everything in Pro Monthly', '2 months free', 'Priority support'],
+    saving: 'Save $51',
   },
 ];
 
 export default function Pricing() {
   const [session, setSession] = useState<any>(null);
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [activeTab, setActiveTab] = useState<'credits' | 'subscription'>('credits');
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -73,13 +65,7 @@ export default function Pricing() {
   }, []);
 
   const handleGetStarted = (item: any, type: string) => {
-    if (type === 'credits') {
-      // One-time purchase
-      setSelectedItem({ ...item, type: 'credits' });
-    } else {
-      // Subscription
-      setSelectedItem({ ...item, type: 'subscription' });
-    }
+    setSelectedItem({ ...item, type });
     setShowCheckout(true);
   };
 
@@ -91,11 +77,18 @@ export default function Pricing() {
     alert('PayPal integration coming soon! You will be redirected to complete your purchase.');
   };
 
-  const getFinalPrice = (item: any) => {
-    if (item.type === 'subscription' && item.id === 'pro-yearly') {
+  const getPrice = (item: any) => {
+    if (item.type === 'subscription' && item.id === 'yearly') {
       return '$69';
     }
-    return item.price ? `$${item.price}` : item.credits;
+    return `$${item.price}`;
+  };
+
+  const getPriceLabel = (item: any) => {
+    if (item.type === 'subscription') {
+      return item.id === 'yearly' ? '/year' : '/month';
+    }
+    return '';
   };
 
   return (
@@ -108,7 +101,7 @@ export default function Pricing() {
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             {session ? (
-              <Link href="/profile" style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: '#f3f4f6', color: '#374151', textDecoration: 'none', fontSize: '14px' }}>
+              <Link href="/subscription" style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: '#f3f4f6', color: '#374151', textDecoration: 'none', fontSize: '14px' }}>
                 My Account
               </Link>
             ) : (
@@ -127,7 +120,7 @@ export default function Pricing() {
           <h1 style={{ fontSize: '32px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
             Pricing
           </h1>
-          <p style={{ fontSize: '16px', color: '#6b7280' }}>Choose a plan that works for you</p>
+          <p style={{ fontSize: '16px', color: '#6b7280' }}>Credits never expire. Subscribe for unlimited usage.</p>
         </div>
 
         {/* Tab Switcher */}
@@ -160,120 +153,122 @@ export default function Pricing() {
 
         {/* Credits Section */}
         {activeTab === 'credits' && (
-          <>
-            <p style={{ textAlign: 'center', fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
-              One-time purchase. Credits never expire.
-            </p>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-              {creditPackages.map((pkg) => (
-                <div key={pkg.id} style={{
-                  borderRadius: '12px', padding: '24px',
-                  border: pkg.popular ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                  backgroundColor: pkg.popular ? '#eff6ff' : 'white',
-                  position: 'relative'
-                }}>
-                  {pkg.popular && (
-                    <div style={{
-                      position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
-                      backgroundColor: '#2563eb', color: 'white', padding: '2px 12px',
-                      borderRadius: '9999px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap'
-                    }}>
-                      Best value
-                    </div>
-                  )}
-                  
-                  <div style={{ marginBottom: '16px' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>{pkg.name}</h3>
-                    <p style={{ fontSize: '13px', color: '#6b7280' }}>{pkg.tagline}</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+            {creditPackages.map((pkg) => (
+              <div key={pkg.id} style={{
+                borderRadius: '12px', padding: '24px',
+                border: pkg.popular ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                backgroundColor: pkg.popular ? '#eff6ff' : 'white',
+                position: 'relative'
+              }}>
+                {pkg.popular && (
+                  <div style={{
+                    position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
+                    backgroundColor: '#2563eb', color: 'white', padding: '2px 12px',
+                    borderRadius: '9999px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap'
+                  }}>
+                    Most popular
                   </div>
-                  
-                  <div style={{ marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                      <span style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>${pkg.price}</span>
-                      <span style={{ fontSize: '14px', color: '#6b7280' }}>/ once</span>
-                    </div>
-                  </div>
-                  
-                  <div style={{ backgroundColor: '#f3f4f6', borderRadius: '8px', padding: '12px', marginBottom: '16px', textAlign: 'center' }}>
-                    <span style={{ fontSize: '20px', fontWeight: '600', color: '#111827' }}>{pkg.credits}</span>
-                    <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '4px' }}>credits</span>
-                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>${pkg.pricePerCredit}/credit</p>
-                  </div>
-                  
-                  <button
-                    onClick={() => handleGetStarted(pkg, 'credits')}
-                    style={{
-                      width: '100%', padding: '10px', borderRadius: '8px',
-                      fontWeight: '500', fontSize: '14px',
-                      backgroundColor: pkg.popular ? '#2563eb' : '#f9fafb',
-                      color: pkg.popular ? 'white' : '#374151',
-                      border: pkg.popular ? 'none' : '1px solid #d1d5db',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Buy now
-                  </button>
+                )}
+                
+                <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>{pkg.name}</h3>
+                  <div style={{ fontSize: '32px', fontWeight: '600', color: '#111827' }}>${pkg.price}</div>
                 </div>
-              ))}
-            </div>
-          </>
+                
+                <div style={{ backgroundColor: '#f3f4f6', borderRadius: '8px', padding: '16px', marginBottom: '16px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{pkg.credits}</span>
+                  <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '4px' }}>credits</span>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>${pkg.pricePerCredit}/credit</p>
+                </div>
+                
+                <button
+                  onClick={() => handleGetStarted(pkg, 'credits')}
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: '8px',
+                    fontWeight: '500', fontSize: '14px',
+                    backgroundColor: pkg.popular ? '#2563eb' : '#f9fafb',
+                    color: pkg.popular ? 'white' : '#374151',
+                    border: pkg.popular ? 'none' : '1px solid #d1d5db',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Buy now
+                </button>
+              </div>
+            ))}
+          </div>
         )}
 
         {/* Subscription Section */}
         {activeTab === 'subscription' && (
           <>
-            <p style={{ textAlign: 'center', fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
-              Unlimited access. Cancel anytime.
-            </p>
-            
+            {/* Billing Toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+              <span style={{ fontSize: '14px', color: billingCycle === 'monthly' ? '#111827' : '#9ca3af', fontWeight: billingCycle === 'monthly' ? '500' : '400' }}>Monthly</span>
+              <button
+                onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+                style={{
+                  width: '40px', height: '24px', borderRadius: '9999px',
+                  backgroundColor: billingCycle === 'yearly' ? '#22c55e' : '#d1d5db',
+                  border: 'none', cursor: 'pointer', position: 'relative',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                <span style={{
+                  position: 'absolute', top: '2px',
+                  left: billingCycle === 'yearly' ? '20px' : '2px',
+                  width: '20px', height: '20px', borderRadius: '50%',
+                  backgroundColor: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  transition: 'left 0.2s'
+                }} />
+              </button>
+              <span style={{ fontSize: '14px', color: billingCycle === 'yearly' ? '#111827' : '#9ca3af', fontWeight: billingCycle === 'yearly' ? '500' : '400' }}>
+                Pay annually
+                {billingCycle === 'yearly' && (
+                  <span style={{ marginLeft: '4px', color: '#16a34a', fontWeight: '500' }}>Save 42%</span>
+                )}
+              </span>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
               {subscriptionPlans.map((plan) => (
                 <div key={plan.id} style={{
                   borderRadius: '12px', padding: '24px',
-                  border: plan.id === 'pro-yearly' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                  backgroundColor: plan.id === 'pro-yearly' ? '#eff6ff' : 'white',
+                  border: plan.id === 'yearly' ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                  backgroundColor: plan.id === 'yearly' ? '#eff6ff' : 'white',
                   position: 'relative'
                 }}>
-                  {plan.id === 'pro-yearly' && (
+                  {plan.saving && (
                     <div style={{
                       position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
                       backgroundColor: '#16a34a', color: 'white', padding: '2px 12px',
                       borderRadius: '9999px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap'
                     }}>
-                      Save 42%
+                      {plan.saving}
                     </div>
                   )}
                   
-                  <div style={{ marginBottom: '16px' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>{plan.name}</h3>
-                    <p style={{ fontSize: '13px', color: '#6b7280' }}>{plan.tagline}</p>
-                  </div>
-                  
-                  <div style={{ marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                      <span style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>${plan.price}</span>
-                      <span style={{ fontSize: '14px', color: '#6b7280' }}>/{plan.period}</span>
+                  <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>{plan.name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+                      <span style={{ fontSize: '32px', fontWeight: '600', color: '#111827' }}>
+                        {billingCycle === 'yearly' && plan.id === 'monthly' ? '$69' : `$${plan.price}`}
+                      </span>
+                      <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                        {billingCycle === 'yearly' && plan.id === 'monthly' ? '/year' : `/${plan.period}`}
+                      </span>
                     </div>
                   </div>
                   
-                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0' }}>
-                    {plan.features.map((feature, i) => (
-                      <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '13px', color: '#374151' }}>
-                        <span style={{ color: '#22c55e', fontSize: '14px' }}>✓</span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  
                   <button
-                    onClick={() => handleGetStarted(plan, 'subscription')}
+                    onClick={() => handleGetStarted({ ...plan, type: 'subscription', id: billingCycle === 'yearly' ? 'yearly' : plan.id }, 'subscription')}
                     style={{
                       width: '100%', padding: '10px', borderRadius: '8px',
                       fontWeight: '500', fontSize: '14px',
-                      backgroundColor: plan.id === 'pro-yearly' ? '#2563eb' : '#f9fafb',
-                      color: plan.id === 'pro-yearly' ? 'white' : '#374151',
-                      border: plan.id === 'pro-yearly' ? 'none' : '1px solid #d1d5db',
+                      backgroundColor: plan.id === 'yearly' ? '#2563eb' : '#f9fafb',
+                      color: plan.id === 'yearly' ? 'white' : '#374151',
+                      border: plan.id === 'yearly' ? 'none' : '1px solid #d1d5db',
                       cursor: 'pointer'
                     }}
                   >
@@ -285,10 +280,11 @@ export default function Pricing() {
           </>
         )}
 
-        {/* Need More Section */}
+        {/* Footer Note */}
         <div style={{ textAlign: 'center', marginTop: '32px', padding: '24px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
-          <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>Need a custom plan?</p>
-          <a href="mailto:support@example.com" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>Contact us</a>
+          <p style={{ fontSize: '14px', color: '#6b7280' }}>
+            Or <Link href="/pricing" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>subscribe</Link> for unlimited usage. Cancel anytime.
+          </p>
         </div>
       </div>
 
@@ -308,14 +304,14 @@ export default function Pricing() {
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontWeight: '500' }}>{selectedItem.name}</span>
                 <span style={{ fontWeight: '600' }}>
-                  {selectedItem.type === 'credits' ? `$${selectedItem.price}` : `$${selectedItem.price}/${selectedItem.period}`}
+                  {getPrice(selectedItem)}{getPriceLabel(selectedItem)}
                 </span>
               </div>
               <p style={{ fontSize: '12px', color: '#6b7280' }}>
                 {selectedItem.credits ? `${selectedItem.credits} credits` : 'Unlimited photos per month'}
               </p>
-              {selectedItem.type === 'subscription' && selectedItem.id === 'pro-yearly' && (
-                <p style={{ fontSize: '12px', color: '#16a34a', marginTop: '4px' }}>Billed annually - save 42%</p>
+              {selectedItem.type === 'subscription' && selectedItem.id === 'yearly' && (
+                <p style={{ fontSize: '12px', color: '#16a34a', marginTop: '4px' }}>Save 42% with annual billing</p>
               )}
               {selectedItem.type === 'credits' && (
                 <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Credits never expire</p>

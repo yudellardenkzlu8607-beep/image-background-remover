@@ -4,8 +4,8 @@
   "/auth/error/page": "/auth/error",
   "/auth/signin/page": "/auth/signin",
   "/faq/page": "/faq",
-  "/page": "/",
   "/pricing/page": "/pricing",
-  "/subscription/page": "/subscription",
-  "/profile/page": "/profile"
+  "/page": "/",
+  "/profile/page": "/profile",
+  "/subscription/page": "/subscription"
 }
