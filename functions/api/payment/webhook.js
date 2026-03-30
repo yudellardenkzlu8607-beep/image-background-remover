@@ -5,8 +5,16 @@
  * 处理 PayPal 支付回调，更新用户订阅状态或积分
  */
 
-import { verifyWebhook, captureOrder, CREDIT_PACKAGES } from '../paypal.js';
+// 积分包定价
+const CREDIT_PACKAGES = {
+  starter: { name: 'Starter', credits: 50, price: '5.00' },
+  professional: { name: 'Professional', credits: 200, price: '15.00' },
+  enterprise: { name: 'Enterprise', credits: 500, price: '39.00' },
+};
 
+/**
+ * PayPal Webhook 处理
+ */
 export async function onRequestPost(context) {
   try {
     const { env, request } = context;
@@ -15,31 +23,10 @@ export async function onRequestPost(context) {
     const eventType = body.event_type;
     
     console.log('PayPal Webhook received:', eventType);
-    console.log('Body:', JSON.stringify(body));
 
-    // 验证 webhook 签名（生产环境需要开启）
-    // const isValid = await verifyWebhook(body, {
-    //   'paypal-auth-algo': request.headers.get('paypal-auth-algo'),
-    //   'paypal-cert-url': request.headers.get('paypal-cert-url'),
-    //   'paypal-transmission-id': request.headers.get('paypal-transmission-id'),
-    //   'paypal-transmission-sig': request.headers.get('paypal-transmission-sig'),
-    //   'paypal-transmission-time': request.headers.get('paypal-transmission-time'),
-    // });
-    // if (!isValid) {
-    //   return new Response(JSON.stringify({ error: 'Invalid signature' }), {
-    //     status: 400,
-    //     headers: { 'Content-Type': 'application/json' }
-    //   });
-    // }
-
-    let userId, customData, amount;
+    let userId, customData;
 
     switch (eventType) {
-      case 'CHECKOUT.ORDER.APPROVED':
-        // 订单已批准，等待捕获
-        console.log('Order approved:', body.resource?.id);
-        break;
-
       case 'PAYMENT.CAPTURE.COMPLETED':
         // 积分包支付完成
         const capture = body.resource;
@@ -51,15 +38,12 @@ export async function onRequestPost(context) {
             if (customData.type === 'credits' && customData.packageId) {
               const pkg = CREDIT_PACKAGES[customData.packageId];
               if (pkg) {
-                // 添加积分
-                const newBalance = pkg.credits;
-                
                 // 更新用户积分
                 let credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
                 
                 if (!credits) {
                   await env.DB.prepare('INSERT INTO user_credits (user_id, balance, total_purchased, total_used, bonus_received) VALUES (?, 0, 0, 0, 0)').bind(userId).run();
-                  credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
+                  credits = { balance: 0 };
                 }
                 
                 const updatedBalance = (credits?.balance || 0) + pkg.credits;
@@ -94,7 +78,6 @@ export async function onRequestPost(context) {
             customData = JSON.parse(subCreated.custom_id);
             userId = customData.userId;
             
-            // 更新订阅状态
             const planInfo = customData.planId === 'yearly' 
               ? { plan: 'pro-yearly', credits: 600, period: 365 }
               : { plan: 'pro-monthly', credits: 0, period: 30 };
@@ -103,27 +86,10 @@ export async function onRequestPost(context) {
             const endDate = new Date(now);
             endDate.setDate(endDate.getDate() + planInfo.period);
             
-            // 检查是否已有订阅
-            const existingSub = await env.DB.prepare(`
-              SELECT * FROM subscriptions WHERE user_id = ? AND status = 'active'
-            `).bind(userId).first();
-            
-            if (existingSub) {
-              // 更新现有订阅
-              await env.DB.prepare(`
-                UPDATE subscriptions 
-                SET plan = ?, status = 'active', 
-                    current_period_start = CURRENT_TIMESTAMP,
-                    current_period_end = ?
-                WHERE user_id = ?
-              `).bind(planInfo.plan, endDate.toISOString(), userId).run();
-            } else {
-              // 创建新订阅
-              await env.DB.prepare(`
-                INSERT INTO subscriptions (user_id, plan, status, credits_granted, current_period_start, current_period_end)
-                VALUES (?, ?, 'active', ?, CURRENT_TIMESTAMP, ?)
-              `).bind(userId, planInfo.plan, planInfo.credits, endDate.toISOString()).run();
-            }
+            await env.DB.prepare(`
+              INSERT OR REPLACE INTO subscriptions (user_id, plan, status, credits_granted, current_period_start, current_period_end)
+              VALUES (?, ?, 'active', ?, CURRENT_TIMESTAMP, ?)
+            `).bind(userId, planInfo.plan, planInfo.credits, endDate.toISOString()).run();
             
             console.log(`Subscription activated for user ${userId}: ${planInfo.plan}`);
           } catch (e) {
@@ -133,7 +99,6 @@ export async function onRequestPost(context) {
         break;
 
       case 'BILLING.SUBSCRIPTION.CANCELLED':
-        // 订阅取消
         const subCanceled = body.resource;
         if (subCanceled.custom_id) {
           try {
@@ -141,9 +106,7 @@ export async function onRequestPost(context) {
             userId = customData.userId;
             
             await env.DB.prepare(`
-              UPDATE subscriptions 
-              SET status = 'cancelled'
-              WHERE user_id = ?
+              UPDATE subscriptions SET status = 'cancelled' WHERE user_id = ?
             `).bind(userId).run();
             
             console.log(`Subscription canceled for user ${userId}`);
@@ -153,23 +116,20 @@ export async function onRequestPost(context) {
         }
         break;
 
-      case 'BILLING.SUBSCRIPTION.REACTIVATED':
-        // 订阅重新激活
-        const subReactivated = body.resource;
-        if (subReactivated.custom_id) {
+      case 'BILLING.SUBSCRIPTION.ACTIVATED':
+        const subActivated = body.resource;
+        if (subActivated.custom_id) {
           try {
-            customData = JSON.parse(subReactivated.custom_id);
+            customData = JSON.parse(subActivated.custom_id);
             userId = customData.userId;
             
             await env.DB.prepare(`
-              UPDATE subscriptions 
-              SET status = 'active'
-              WHERE user_id = ?
+              UPDATE subscriptions SET status = 'active' WHERE user_id = ?
             `).bind(userId).run();
             
-            console.log(`Subscription reactivated for user ${userId}`);
+            console.log(`Subscription activated for user ${userId}`);
           } catch (e) {
-            console.error('Error reactivating subscription:', e);
+            console.error('Error activating subscription:', e);
           }
         }
         break;
