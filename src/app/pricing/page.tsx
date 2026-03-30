@@ -156,7 +156,8 @@ export default function Pricing() {
         </div>
 
         {/* Credits Section */}
-        <div id="credits" style={{ marginBottom: '48px' }}>
+        <div id="credits" style={{ marginBottom: '48px', paddingTop: '20px' }}>
+          <div style={{ height: '1px' }} id="credits-anchor" />
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Buy Credits</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             {creditPackages.map((pkg) => (
@@ -206,7 +207,8 @@ export default function Pricing() {
         </div>
 
         {/* Subscription Section */}
-        <div id="subscription">
+        <div id="subscription" style={{ paddingTop: '20px' }}>
+          <div style={{ height: '1px' }} id="subscription-anchor" />
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Or Subscribe for Unlimited</h2>
           
           {/* Billing Toggle */}
