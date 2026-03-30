@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 const creditPackages = [
@@ -49,9 +49,12 @@ const subscriptionPlans = [
 export default function Pricing() {
   const [session, setSession] = useState<any>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [activeSection, setActiveSection] = useState<'credits' | 'subscription'>('credits');
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [email, setEmail] = useState('');
+  const creditsRef = useRef<HTMLDivElement>(null);
+  const subscriptionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -61,6 +64,24 @@ export default function Pricing() {
         if (data?.user?.email) setEmail(data.user.email);
       })
       .catch(console.error);
+  }, []);
+
+  // Track scroll position to highlight active section
+  useEffect(() => {
+    const handleScroll = () => {
+      const creditsTop = creditsRef.current?.getBoundingClientRect().top || 0;
+      const subscriptionTop = subscriptionRef.current?.getBoundingClientRect().top || 0;
+      
+      if (creditsTop <= 150 && creditsTop > subscriptionTop - 400) {
+        setActiveSection('credits');
+      } else if (subscriptionTop <= 150) {
+        setActiveSection('subscription');
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleGetStarted = (item: any, type: string) => {
@@ -122,14 +143,42 @@ export default function Pricing() {
           <p style={{ fontSize: '16px', color: '#6b7280' }}>Credits never expire. Subscribe for unlimited usage.</p>
         </div>
 
-        {/* Two Big Buttons - Click to scroll */}
+        {/* Two Big Buttons - Click to scroll, highlight based on scroll position */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '48px' }}>
-          <a href="#credits" style={{
-            borderRadius: '12px', padding: '24px',
-            border: '2px solid #e5e7eb', backgroundColor: 'white',
-            textAlign: 'center', textDecoration: 'none',
-            transition: 'all 0.2s'
-          }}>
+          <a 
+            href="#credits-anchor" 
+            onClick={(e) => { e.preventDefault(); creditsRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
+            style={{
+              borderRadius: '12px', padding: '24px',
+              border: activeSection === 'credits' ? '2px solid #2563eb' : '2px solid #e5e7eb', 
+              backgroundColor: activeSection === 'credits' ? '#eff6ff' : 'white',
+              textAlign: 'center', textDecoration: 'none',
+              transition: 'all 0.2s',
+              boxShadow: activeSection === 'credits' ? '0 0 0 3px rgba(37, 99, 235, 0.2)' : 'none'
+            }}
+          >
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>💳</div>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Buy Credits</h3>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>One-time purchase. Credits never expire.</p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <span style={{ padding: '4px 12px', backgroundColor: activeSection === 'credits' ? 'white' : '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$5 / 50 credits</span>
+              <span style={{ padding: '4px 12px', backgroundColor: activeSection === 'credits' ? 'white' : '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$15 / 200 credits</span>
+              <span style={{ padding: '4px 12px', backgroundColor: activeSection === 'credits' ? 'white' : '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$39 / 500 credits</span>
+            </div>
+          </a>
+          
+          <a 
+            href="#subscription-anchor"
+            onClick={(e) => { e.preventDefault(); subscriptionRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
+            style={{
+              borderRadius: '12px', padding: '24px',
+              border: activeSection === 'subscription' ? '2px solid #2563eb' : '2px solid #e5e7eb',
+              backgroundColor: activeSection === 'subscription' ? '#eff6ff' : 'white',
+              textAlign: 'center', textDecoration: 'none',
+              transition: 'all 0.2s',
+              boxShadow: activeSection === 'subscription' ? '0 0 0 3px rgba(37, 99, 235, 0.2)' : 'none'
+            }}
+          >
             <div style={{ fontSize: '32px', marginBottom: '8px' }}>💳</div>
             <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Buy Credits</h3>
             <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>One-time purchase. Credits never expire.</p>
@@ -140,11 +189,18 @@ export default function Pricing() {
             </div>
           </a>
           
-          <a href="#subscription" style={{
-            borderRadius: '12px', padding: '24px',
-            border: '2px solid #2563eb', backgroundColor: '#eff6ff',
-            textAlign: 'center', textDecoration: 'none'
-          }}>
+          <a 
+            href="#subscription-anchor"
+            onClick={(e) => { e.preventDefault(); subscriptionRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
+            style={{
+              borderRadius: '12px', padding: '24px',
+              border: activeSection === 'subscription' ? '2px solid #2563eb' : '2px solid #e5e7eb',
+              backgroundColor: activeSection === 'subscription' ? '#eff6ff' : 'white',
+              textAlign: 'center', textDecoration: 'none',
+              transition: 'all 0.2s',
+              boxShadow: activeSection === 'subscription' ? '0 0 0 3px rgba(37, 99, 235, 0.2)' : 'none'
+            }}
+          >
             <div style={{ fontSize: '32px', marginBottom: '8px' }}>📋</div>
             <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Subscribe</h3>
             <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Unlimited usage. Cancel anytime.</p>
@@ -156,8 +212,7 @@ export default function Pricing() {
         </div>
 
         {/* Credits Section */}
-        <div id="credits" style={{ marginBottom: '48px', paddingTop: '20px' }}>
-          <div style={{ height: '1px' }} id="credits-anchor" />
+        <div ref={creditsRef} id="credits-anchor" style={{ marginBottom: '48px', paddingTop: '20px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Buy Credits</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             {creditPackages.map((pkg) => (
@@ -207,8 +262,7 @@ export default function Pricing() {
         </div>
 
         {/* Subscription Section */}
-        <div id="subscription" style={{ paddingTop: '20px' }}>
-          <div style={{ height: '1px' }} id="subscription-anchor" />
+        <div ref={subscriptionRef} id="subscription-anchor" style={{ paddingTop: '20px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Or Subscribe for Unlimited</h2>
           
           {/* Billing Toggle */}
