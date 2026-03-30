@@ -49,7 +49,6 @@ const subscriptionPlans = [
 export default function Pricing() {
   const [session, setSession] = useState<any>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const [activeTab, setActiveTab] = useState<'credits' | 'subscription'>('credits');
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [email, setEmail] = useState('');
@@ -123,37 +122,43 @@ export default function Pricing() {
           <p style={{ fontSize: '16px', color: '#6b7280' }}>Credits never expire. Subscribe for unlimited usage.</p>
         </div>
 
-        {/* Tab Switcher */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
-          <div style={{ display: 'inline-flex', backgroundColor: '#f3f4f6', borderRadius: '8px', padding: '4px' }}>
-            <button
-              onClick={() => setActiveTab('credits')}
-              style={{
-                padding: '8px 24px', borderRadius: '6px', border: 'none', fontSize: '14px', fontWeight: '500', cursor: 'pointer',
-                backgroundColor: activeTab === 'credits' ? 'white' : 'transparent',
-                color: activeTab === 'credits' ? '#111827' : '#6b7280',
-                boxShadow: activeTab === 'credits' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
-              }}
-            >
-              Credits
-            </button>
-            <button
-              onClick={() => setActiveTab('subscription')}
-              style={{
-                padding: '8px 24px', borderRadius: '6px', border: 'none', fontSize: '14px', fontWeight: '500', cursor: 'pointer',
-                backgroundColor: activeTab === 'subscription' ? 'white' : 'transparent',
-                color: activeTab === 'subscription' ? '#111827' : '#6b7280',
-                boxShadow: activeTab === 'subscription' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
-              }}
-            >
-              Subscription
-            </button>
+        {/* Two Big Buttons */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '48px' }}>
+          <div style={{
+            borderRadius: '12px', padding: '24px',
+            border: '2px solid #e5e7eb', backgroundColor: 'white',
+            textAlign: 'center', cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>💳</div>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Buy Credits</h3>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>One-time purchase. Credits never expire.</p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <span style={{ padding: '4px 12px', backgroundColor: '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$5 / 50 credits</span>
+              <span style={{ padding: '4px 12px', backgroundColor: '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$15 / 200 credits</span>
+              <span style={{ padding: '4px 12px', backgroundColor: '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$39 / 500 credits</span>
+            </div>
+          </div>
+          
+          <div style={{
+            borderRadius: '12px', padding: '24px',
+            border: '2px solid #2563eb', backgroundColor: '#eff6ff',
+            textAlign: 'center', cursor: 'pointer'
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📋</div>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Subscribe</h3>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Unlimited usage. Cancel anytime.</p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <span style={{ padding: '4px 12px', backgroundColor: 'white', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$10/month</span>
+              <span style={{ padding: '4px 12px', backgroundColor: '#16a34a', color: 'white', borderRadius: '9999px', fontSize: '12px' }}>$69/year Save 42%</span>
+            </div>
           </div>
         </div>
 
         {/* Credits Section */}
-        {activeTab === 'credits' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Buy Credits</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             {creditPackages.map((pkg) => (
               <div key={pkg.id} style={{
                 borderRadius: '12px', padding: '24px',
@@ -198,93 +203,86 @@ export default function Pricing() {
               </div>
             ))}
           </div>
-        )}
+        </div>
 
         {/* Subscription Section */}
-        {activeTab === 'subscription' && (
-          <>
-            {/* Billing Toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-              <span style={{ fontSize: '14px', color: billingCycle === 'monthly' ? '#111827' : '#9ca3af', fontWeight: billingCycle === 'monthly' ? '500' : '400' }}>Monthly</span>
-              <button
-                onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                style={{
-                  width: '40px', height: '24px', borderRadius: '9999px',
-                  backgroundColor: billingCycle === 'yearly' ? '#22c55e' : '#d1d5db',
-                  border: 'none', cursor: 'pointer', position: 'relative',
-                  transition: 'background-color 0.2s'
-                }}
-              >
-                <span style={{
-                  position: 'absolute', top: '2px',
-                  left: billingCycle === 'yearly' ? '20px' : '2px',
-                  width: '20px', height: '20px', borderRadius: '50%',
-                  backgroundColor: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                  transition: 'left 0.2s'
-                }} />
-              </button>
-              <span style={{ fontSize: '14px', color: billingCycle === 'yearly' ? '#111827' : '#9ca3af', fontWeight: billingCycle === 'yearly' ? '500' : '400' }}>
-                Pay annually
-                {billingCycle === 'yearly' && (
-                  <span style={{ marginLeft: '4px', color: '#16a34a', fontWeight: '500' }}>Save 42%</span>
-                )}
-              </span>
-            </div>
+        <div>
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Or Subscribe for Unlimited</h2>
+          
+          {/* Billing Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
+            <span style={{ fontSize: '14px', color: billingCycle === 'monthly' ? '#111827' : '#9ca3af', fontWeight: billingCycle === 'monthly' ? '500' : '400' }}>Monthly</span>
+            <button
+              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+              style={{
+                width: '40px', height: '24px', borderRadius: '9999px',
+                backgroundColor: billingCycle === 'yearly' ? '#22c55e' : '#d1d5db',
+                border: 'none', cursor: 'pointer', position: 'relative',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: '2px',
+                left: billingCycle === 'yearly' ? '20px' : '2px',
+                width: '20px', height: '20px', borderRadius: '50%',
+                backgroundColor: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                transition: 'left 0.2s'
+              }} />
+            </button>
+            <span style={{ fontSize: '14px', color: billingCycle === 'yearly' ? '#111827' : '#9ca3af', fontWeight: billingCycle === 'yearly' ? '500' : '400' }}>
+              Pay annually
+              {billingCycle === 'yearly' && (
+                <span style={{ marginLeft: '4px', color: '#16a34a', fontWeight: '500' }}>Save 42%</span>
+              )}
+            </span>
+          </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
-              {subscriptionPlans.map((plan) => (
-                <div key={plan.id} style={{
-                  borderRadius: '12px', padding: '24px',
-                  border: plan.id === 'yearly' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                  backgroundColor: plan.id === 'yearly' ? '#eff6ff' : 'white',
-                  position: 'relative'
-                }}>
-                  {plan.saving && (
-                    <div style={{
-                      position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
-                      backgroundColor: '#16a34a', color: 'white', padding: '2px 12px',
-                      borderRadius: '9999px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap'
-                    }}>
-                      {plan.saving}
-                    </div>
-                  )}
-                  
-                  <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>{plan.name}</h3>
-                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
-                      <span style={{ fontSize: '32px', fontWeight: '600', color: '#111827' }}>
-                        {billingCycle === 'yearly' && plan.id === 'monthly' ? '$69' : `$${plan.price}`}
-                      </span>
-                      <span style={{ fontSize: '14px', color: '#6b7280' }}>
-                        {billingCycle === 'yearly' && plan.id === 'monthly' ? '/year' : `/${plan.period}`}
-                      </span>
-                    </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            {subscriptionPlans.map((plan) => (
+              <div key={plan.id} style={{
+                borderRadius: '12px', padding: '24px',
+                border: plan.id === 'yearly' ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                backgroundColor: plan.id === 'yearly' ? '#eff6ff' : 'white',
+                position: 'relative'
+              }}>
+                {plan.saving && (
+                  <div style={{
+                    position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
+                    backgroundColor: '#16a34a', color: 'white', padding: '2px 12px',
+                    borderRadius: '9999px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap'
+                  }}>
+                    {plan.saving}
                   </div>
-                  
-                  <button
-                    onClick={() => handleGetStarted({ ...plan, type: 'subscription', id: billingCycle === 'yearly' ? 'yearly' : plan.id }, 'subscription')}
-                    style={{
-                      width: '100%', padding: '10px', borderRadius: '8px',
-                      fontWeight: '500', fontSize: '14px',
-                      backgroundColor: plan.id === 'yearly' ? '#2563eb' : '#f9fafb',
-                      color: plan.id === 'yearly' ? 'white' : '#374151',
-                      border: plan.id === 'yearly' ? 'none' : '1px solid #d1d5db',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Subscribe
-                  </button>
+                )}
+                
+                <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>{plan.name}</h3>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '32px', fontWeight: '600', color: '#111827' }}>
+                      {billingCycle === 'yearly' && plan.id === 'monthly' ? '$69' : `$${plan.price}`}
+                    </span>
+                    <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                      {billingCycle === 'yearly' && plan.id === 'monthly' ? '/year' : `/${plan.period}`}
+                    </span>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Footer Note */}
-        <div style={{ textAlign: 'center', marginTop: '32px', padding: '24px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
-          <p style={{ fontSize: '14px', color: '#6b7280' }}>
-            Or <Link href="/pricing" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: '500' }}>subscribe</Link> for unlimited usage. Cancel anytime.
-          </p>
+                
+                <button
+                  onClick={() => handleGetStarted({ ...plan, type: 'subscription', id: billingCycle === 'yearly' ? 'yearly' : plan.id }, 'subscription')}
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: '8px',
+                    fontWeight: '500', fontSize: '14px',
+                    backgroundColor: plan.id === 'yearly' ? '#2563eb' : '#f9fafb',
+                    color: plan.id === 'yearly' ? 'white' : '#374151',
+                    border: plan.id === 'yearly' ? 'none' : '1px solid #d1d5db',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Subscribe
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
