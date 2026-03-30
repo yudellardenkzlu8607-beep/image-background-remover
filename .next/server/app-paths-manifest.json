@@ -4,7 +4,7 @@
   "/auth/error/page": "app/auth/error/page.js",
   "/auth/signin/page": "app/auth/signin/page.js",
   "/faq/page": "app/faq/page.js",
-  "/pricing/page": "app/pricing/page.js",
   "/page": "app/page.js",
+  "/pricing/page": "app/pricing/page.js",
   "/profile/page": "app/profile/page.js"
 }
