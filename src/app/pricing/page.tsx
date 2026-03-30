@@ -10,20 +10,11 @@ const plans = [
     price: 0,
     period: 'month',
     credits: 5,
-    creditsPeriod: 'month',
-    perCredit: 0,
     tagline: 'Get started with basic background removal',
-    features: [
-      '5 photos per month',
-      'Standard processing',
-      'Basic support',
-      'No credit card required'
-    ],
+    features: ['5 photos per month', 'Standard processing', 'Basic support', 'No credit card required'],
     highlight: false,
-    badge: '',
     cta: 'Get started',
     annualPrice: 0,
-    annualNote: ''
   },
   {
     id: 'pro',
@@ -31,41 +22,12 @@ const plans = [
     price: 10,
     period: 'month',
     credits: null,
-    creditsPeriod: 'unlimited',
-    perCredit: 0,
     tagline: 'Unlimited access for professionals',
-    features: [
-      'Unlimited photos per month',
-      'Priority processing',
-      '24/7 support',
-      'Commercial license',
-      'API access'
-    ],
+    features: ['Unlimited photos per month', 'Priority processing', '24/7 support', 'Commercial license', 'API access'],
     highlight: true,
-    badge: 'Most popular',
     cta: 'Get started',
     annualPrice: 69,
     annualPerMonth: 5.75,
-    annualNote: 'Billed annually'
-  }
-];
-
-const faqItems = [
-  {
-    q: 'Can I cancel anytime?',
-    a: 'Yes, you can cancel your subscription at any time with no hidden fees.'
-  },
-  {
-    q: 'What payment methods do you accept?',
-    a: 'We accept PayPal and all major credit cards (Visa, Mastercard, American Express).'
-  },
-  {
-    q: 'Is there a free trial?',
-    a: 'Yes! Every user starts with 5 free photos per month. No credit card required.'
-  },
-  {
-    q: 'Do unused photos roll over?',
-    a: 'No, your monthly photo allowance does not roll over to the next month.'
   }
 ];
 
@@ -73,8 +35,7 @@ export default function Pricing() {
   const [session, setSession] = useState<any>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [showCheckout, setShowCheckout] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
-  const [email, setEmail] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -83,63 +44,42 @@ export default function Pricing() {
       .catch(console.error);
   }, []);
 
-  const handleSelectPlan = (plan: typeof plans[0]) => {
+  const getPriceDisplay = (plan: any) => {
+    if (plan.id === 'free') return '$0';
+    if (billingCycle === 'annual') return `$${plan.annualPrice}`;
+    return `$${plan.price}`;
+  };
+
+  const getPricePeriod = (plan: any) => {
+    if (plan.id === 'free') return '/month';
+    if (billingCycle === 'annual') return '/year';
+    return '/month';
+  };
+
+  const handleSelectPlan = (plan: any) => {
     if (plan.id === 'free') {
-      alert('Free plan activated! You can start using the service now.');
+      alert('Free plan activated!');
       return;
     }
     setSelectedPlan(plan);
     setShowCheckout(true);
   };
 
-  const handleCheckout = () => {
-    if (!email) {
-      alert('Please enter your email address');
-      return;
-    }
-    alert('Payment integration coming soon! You will be redirected to PayPal checkout.');
-  };
-
-  const getPrice = (plan: typeof plans[0]) => {
-    if (plan.id === 'free') return 0;
-    return billingCycle === 'annual' ? plan.annualPrice : plan.price;
-  };
-
-  const getPriceDisplay = (plan: typeof plans[0]) => {
-    if (plan.id === 'free') return '$0';
-    if (billingCycle === 'annual') return `$${plan.annualPrice}`;
-    return `$${plan.price}`;
-  };
-
-  const getPricePeriod = (plan: typeof plans[0]) => {
-    if (plan.id === 'free') return '/month';
-    if (billingCycle === 'annual') return '/year';
-    return '/month';
-  };
-
   return (
-    <main className="min-h-screen bg-white">
+    <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
       {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-gray-600 hover:text-gray-800">
-              ← Back
-            </Link>
+      <header style={{ borderBottom: '1px solid #e5e7eb', padding: '16px 0' }}>
+        <div style={{ maxWidth: '1024px', margin: '0 auto', padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <Link href="/" style={{ color: '#6b7280', textDecoration: 'none' }}>← Back</Link>
           </div>
-          <div className="flex items-center gap-3">
+          <div style={{ display: 'flex', gap: '12px' }}>
             {session ? (
-              <Link
-                href="/profile"
-                className="px-4 py-2 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
-              >
+              <Link href="/profile" style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: '#f3f4f6', color: '#374151', textDecoration: 'none', fontSize: '14px' }}>
                 My Account
               </Link>
             ) : (
-              <Link
-                href="/api/auth/signin/google"
-                className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
-              >
+              <Link href="/api/auth/signin/google" style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: '#3b82f6', color: 'white', textDecoration: 'none', fontSize: '14px' }}>
                 Sign in
               </Link>
             )}
@@ -148,108 +88,91 @@ export default function Pricing() {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
+      <div style={{ maxWidth: '1024px', margin: '0 auto', padding: '48px 16px' }}>
         {/* Page Title */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: '#111827', marginBottom: '12px' }}>
             Simple, transparent pricing
           </h1>
-          <p className="text-lg text-gray-500">
-            No hidden fees. Cancel anytime.
-          </p>
+          <p style={{ fontSize: '18px', color: '#6b7280' }}>No hidden fees. Cancel anytime.</p>
         </div>
 
         {/* Billing Toggle */}
-        {plans.some(p => p.annualPrice) && (
-          <div className="flex items-center justify-center gap-3 mb-10">
-            <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-gray-900' : 'text-gray-400'}`}>
-              Monthly
-            </span>
-            <button
-              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'annual' : 'monthly')}
-              className={`relative w-14 h-7 rounded-full transition-colors ${
-                billingCycle === 'annual' ? 'bg-green-500' : 'bg-gray-300'
-              }`}
-            >
-              <span
-                className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                  billingCycle === 'annual' ? 'left-8' : 'left-1'
-                }`}
-              />
-            </button>
-            <span className={`text-sm font-medium ${billingCycle === 'annual' ? 'text-gray-900' : 'text-gray-400'}`}>
-              Annual
-              <span className="ml-1 text-green-600 font-semibold">-42%</span>
-            </span>
-          </div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '40px' }}>
+          <span style={{ fontSize: '14px', fontWeight: '500', color: billingCycle === 'monthly' ? '#111827' : '#9ca3af' }}>Monthly</span>
+          <button
+            onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'annual' : 'monthly')}
+            style={{
+              width: '56px', height: '28px', borderRadius: '9999px', position: 'relative',
+              backgroundColor: billingCycle === 'annual' ? '#22c55e' : '#d1d5db',
+              border: 'none', cursor: 'pointer', transition: 'background-color 0.2s'
+            }}
+          >
+            <span style={{
+              position: 'absolute', top: '4px',
+              left: billingCycle === 'annual' ? '32px' : '4px',
+              width: '20px', height: '20px', borderRadius: '50%',
+              backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              transition: 'left 0.2s'
+            }} />
+          </button>
+          <span style={{ fontSize: '14px', fontWeight: '500', color: billingCycle === 'annual' ? '#111827' : '#9ca3af' }}>
+            Annual<span style={{ marginLeft: '4px', color: '#16a34a', fontWeight: '600' }}>-42%</span>
+          </span>
+        </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '48px' }}>
           {plans.map((plan) => (
-            <div 
-              key={plan.id}
-              className={`relative rounded-2xl p-8 border-2 transition-all ${
-                plan.highlight 
-                  ? 'border-blue-500 bg-blue-50/30' 
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              {plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                    {plan.badge}
-                  </span>
+            <div key={plan.id} style={{
+              borderRadius: '16px', padding: '32px',
+              border: plan.highlight ? '2px solid #3b82f6' : '2px solid #e5e7eb',
+              backgroundColor: plan.highlight ? 'rgba(59, 130, 246, 0.05)' : 'white',
+              position: 'relative'
+            }}>
+              {plan.highlight && (
+                <div style={{
+                  position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
+                  backgroundColor: '#3b82f6', color: 'white', padding: '4px 16px',
+                  borderRadius: '9999px', fontSize: '14px', fontWeight: '500'
+                }}>
+                  Most popular
                 </div>
               )}
               
-              {/* Plan Name & Tagline */}
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-1">{plan.name}</h3>
-                <p className="text-sm text-gray-500">{plan.tagline}</p>
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', marginBottom: '4px' }}>{plan.name}</h3>
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>{plan.tagline}</p>
               </div>
               
-              {/* Price */}
-              <div className="text-center mb-6">
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-5xl font-bold text-gray-900">
-                    {getPriceDisplay(plan)}
-                  </span>
-                  <span className="text-gray-500">{getPricePeriod(plan)}</span>
+              <div style={{ textAlign: 'center', marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '48px', fontWeight: 'bold', color: '#111827' }}>{getPriceDisplay(plan)}</span>
+                  <span style={{ color: '#6b7280' }}>{getPricePeriod(plan)}</span>
                 </div>
-                {plan.annualNote && billingCycle === 'annual' && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    {plan.annualNote} (${plan.annualPerMonth}/month)
-                  </p>
-                )}
               </div>
               
-              {/* Credits */}
-              <div className="text-center mb-6 pb-6 border-b border-gray-200">
-                <p className="text-gray-700">
-                  {plan.credits ? `${plan.credits} photos` : 'Unlimited photos'} 
-                  <span className="text-gray-400"> / month</span>
-                </p>
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <p style={{ color: '#374151' }}>{plan.credits ? `${plan.credits} photos` : 'Unlimited photos'} <span style={{ color: '#9ca3af' }}>/ month</span></p>
               </div>
               
-              {/* Features */}
-              <ul className="space-y-3 mb-8">
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: '32px' }}>
                 {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm">
-                    <span className="text-green-500 mt-0.5">✓</span>
-                    <span className="text-gray-700">{feature}</span>
+                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px', fontSize: '14px' }}>
+                    <span style={{ color: '#22c55e' }}>✓</span>
+                    <span style={{ color: '#374151' }}>{feature}</span>
                   </li>
                 ))}
               </ul>
               
-              {/* CTA Button */}
               <button
                 onClick={() => handleSelectPlan(plan)}
-                className={`w-full py-3 rounded-lg font-semibold transition-all ${
-                  plan.highlight
-                    ? 'bg-blue-500 text-white hover:bg-blue-600'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                }`}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: '8px',
+                  fontWeight: '600', fontSize: '16px',
+                  backgroundColor: plan.highlight ? '#3b82f6' : '#111827',
+                  color: 'white', border: 'none', cursor: 'pointer'
+                }}
               >
                 {plan.cta}
               </button>
@@ -257,61 +180,55 @@ export default function Pricing() {
           ))}
         </div>
 
-        {/* Annual Discount Highlight */}
+        {/* Annual Discount */}
         {billingCycle === 'annual' && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center mb-8">
-            <p className="text-green-700 font-medium">
-              🌿 You save $51 per year with annual billing!
-            </p>
+          <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '16px', textAlign: 'center', marginBottom: '32px' }}>
+            <p style={{ color: '#15803d', fontWeight: '500' }}>🌿 You save $51 per year with annual billing!</p>
           </div>
         )}
 
-        {/* Need More Section */}
-        <div className="text-center mb-12">
-          <p className="text-gray-500">
-            Need more? <a href="mailto:support@example.com" className="text-blue-500 hover:underline">Contact us</a> for custom pricing.
-          </p>
-        </div>
-
-        {/* Comparison */}
-        <div className="border-t pt-8 mb-8">
-          <h2 className="text-xl font-bold text-center mb-6">What's included</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 text-gray-500 font-medium">Feature</th>
-                  <th className="text-center py-3 text-gray-500 font-medium">Free</th>
-                  <th className="text-center py-3 text-gray-900 font-medium bg-blue-50 rounded-t-lg">Pro</th>
+        {/* Comparison Table */}
+        <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '32px', marginBottom: '32px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', textAlign: 'center', marginBottom: '24px' }}>What&apos;s included</h2>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <th style={{ textAlign: 'left', padding: '12px 8px', color: '#6b7280', fontWeight: '500' }}>Feature</th>
+                <th style={{ textAlign: 'center', padding: '12px 8px', color: '#6b7280', fontWeight: '500' }}>Free</th>
+                <th style={{ textAlign: 'center', padding: '12px 8px', color: '#111827', fontWeight: '500', backgroundColor: 'rgba(59, 130, 246, 0.05)', borderRadius: '8px 8px 0 0' }}>Pro</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ['Photos per month', '5', 'Unlimited'],
+                ['Processing speed', 'Standard', 'Priority'],
+                ['Commercial license', '—', '✓'],
+                ['API access', '—', '✓'],
+                ['Support', 'Basic', '24/7']
+              ].map((row, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '12px 8px', color: '#374151' }}>{row[0]}</td>
+                  <td style={{ padding: '12px 8px', textAlign: 'center', color: '#6b7280' }}>{row[1]}</td>
+                  <td style={{ padding: '12px 8px', textAlign: 'center', backgroundColor: 'rgba(59, 130, 246, 0.05)', fontWeight: '500' }}>{row[2]}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {[
-                  ['Photos per month', '5', 'Unlimited'],
-                  ['Processing speed', 'Standard', 'Priority'],
-                  ['Commercial license', '❌', '✅'],
-                  ['API access', '❌', '✅'],
-                  ['Support', 'Basic', '24/7']
-                ].map((row, i) => (
-                  <tr key={i} className="border-b">
-                    <td className="py-3 text-gray-700">{row[0]}</td>
-                    <td className="py-3 text-center text-gray-600">{row[1]}</td>
-                    <td className="py-3 text-center bg-blue-50/50 font-medium">{row[2]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {/* FAQ */}
-        <div className="border-t pt-8">
-          <h2 className="text-xl font-bold text-center mb-6">Frequently asked questions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {faqItems.map((item, i) => (
-              <div key={i} className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-2">Q: {item.q}</h4>
-                <p className="text-sm text-gray-600">{item.a}</p>
+        <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '32px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', textAlign: 'center', marginBottom: '24px' }}>Frequently asked questions</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+            {[
+              { q: 'Can I cancel anytime?', a: 'Yes, you can cancel your subscription at any time with no hidden fees.' },
+              { q: 'What payment methods do you accept?', a: 'We accept PayPal and all major credit cards.' },
+              { q: 'Is there a free trial?', a: 'Yes! Every user starts with 5 free photos per month. No credit card required.' },
+              { q: 'Do unused photos roll over?', a: 'No, your monthly photo allowance does not roll over to the next month.' }
+            ].map((item, i) => (
+              <div key={i} style={{ backgroundColor: '#f9fafb', borderRadius: '8px', padding: '16px' }}>
+                <h4 style={{ fontWeight: '500', color: '#111827', marginBottom: '8px' }}>Q: {item.q}</h4>
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>{item.a}</p>
               </div>
             ))}
           </div>
@@ -320,93 +237,47 @@ export default function Pricing() {
 
       {/* Checkout Modal */}
       {showCheckout && selectedPlan && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold">Order Summary</h3>
-              <button 
-                onClick={() => setShowCheckout(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '448px', width: '100%', padding: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Order Summary</h3>
+              <button onClick={() => setShowCheckout(false)} style={{ color: '#9ca3af', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             </div>
             
-            {/* Plan Summary */}
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">{selectedPlan.name} Plan</span>
-                <span className="font-bold">
-                  {getPriceDisplay(selectedPlan)}{getPricePeriod(selectedPlan)}
-                </span>
+            <div style={{ backgroundColor: '#f9fafb', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontWeight: '500' }}>{selectedPlan.name} Plan</span>
+                <span style={{ fontWeight: 'bold' }}>{getPriceDisplay(selectedPlan)}{getPricePeriod(selectedPlan)}</span>
               </div>
-              <p className="text-sm text-gray-500">
+              <p style={{ fontSize: '14px', color: '#6b7280' }}>
                 {selectedPlan.credits ? `${selectedPlan.credits} photos` : 'Unlimited photos'} per month
               </p>
-              {billingCycle === 'annual' && (
-                <p className="text-sm text-green-600 mt-1">
-                  Annual billing - save 42%
-                </p>
-              )}
             </div>
             
-            {/* Email Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email address
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            {/* Payment Method */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Payment method
-              </label>
-              <div className="flex gap-3">
-                <button className="flex-1 py-3 border-2 border-blue-500 bg-blue-50 rounded-lg font-medium">
-                  <span className="text-blue-600">PayPal</span>
-                </button>
-                <button className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50">
-                  Card
-                </button>
-              </div>
-            </div>
-            
-            {/* CTA */}
             <button
-              onClick={handleCheckout}
-              className="w-full py-4 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 transition"
+              onClick={() => alert('Payment integration coming soon!')}
+              style={{ width: '100%', padding: '16px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '12px', fontWeight: '600', fontSize: '16px', border: 'none', cursor: 'pointer' }}
             >
               Get started
             </button>
             
-            {/* Note */}
-            <p className="text-xs text-gray-500 text-center mt-4">
-              Your free photos will be credited when you upgrade.
+            <p style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', marginTop: '16px' }}>
+              Secure payment via PayPal or Card
             </p>
           </div>
         </div>
-      )
+      )}
 
       {/* Footer */}
-      <footer className="bg-gray-50 py-8 mt-12">
-        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-500">
+      <footer style={{ backgroundColor: '#f9fafb', padding: '32px 0', marginTop: '48px' }}>
+        <div style={{ maxWidth: '1024px', margin: '0 auto', textAlign: 'center', fontSize: '14px', color: '#6b7280' }}>
           <p>© 2026 Image Background Remover. All rights reserved.</p>
-          <div className="flex justify-center gap-4 mt-2">
-            <a href="/faq" className="hover:text-gray-700">FAQ</a>
-            <a href="mailto:support@example.com" className="hover:text-gray-700">Contact</a>
-            <a href="#" className="hover:text-gray-700">Privacy</a>
-            <a href="#" className="hover:text-gray-700">Terms</a>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '8px' }}>
+            <Link href="/faq" style={{ color: '#6b7280', textDecoration: 'none' }}>FAQ</Link>
+            <a href="mailto:support@example.com" style={{ color: '#6b7280', textDecoration: 'none' }}>Contact</a>
           </div>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
