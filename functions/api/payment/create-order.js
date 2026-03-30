@@ -5,7 +5,7 @@
  * Body: { type: 'credits' | 'subscription', packageId: string, planId: string }
  */
 
-import { createCreditOrder, createSubscription, CREDIT_PACKAGES, SUBSCRIPTION_PLANS } from '../../lib/paypal.js';
+import { createCreditOrder, createSubscription, CREDIT_PACKAGES, SUBSCRIPTION_PLANS } from './paypal.js';
 
 export async function onRequestPost(context) {
   try {

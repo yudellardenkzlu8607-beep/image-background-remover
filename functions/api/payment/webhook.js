@@ -5,7 +5,7 @@
  * 处理 PayPal 支付回调，更新用户订阅状态或积分
  */
 
-import { verifyWebhook, captureOrder, CREDIT_PACKAGES } from '../../lib/paypal.js';
+import { verifyWebhook, captureOrder, CREDIT_PACKAGES } from '../paypal.js';
 
 export async function onRequestPost(context) {
   try {
