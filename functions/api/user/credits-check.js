@@ -3,7 +3,7 @@
  * POST /api/user/credits/check
  */
 
-import { getUserCredits, checkAndDeductCredits, getCreditTransactions } from '../../../../src/lib/db.js';
+import { getUserCredits, checkAndDeductCredits, getCreditTransactions } from '../../lib/db.js';
 
 export async function onRequestPost(context) {
   try {
