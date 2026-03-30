@@ -198,13 +198,13 @@ export default function Home() {
               登录
             </a>
             <a
-              href="/pricing"
+              href="/pricing#credits"
               className="px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
             >
               Credits
             </a>
             <a
-              href="/pricing"
+              href="/pricing#subscription"
               className="px-3 py-1 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition font-medium"
             >
               Subscribe

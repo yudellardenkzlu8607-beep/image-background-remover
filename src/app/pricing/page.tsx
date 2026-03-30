@@ -61,6 +61,19 @@ export default function Pricing() {
         if (data?.user?.email) setEmail(data.user.email);
       })
       .catch(console.error);
+    
+    // Scroll to section based on URL hash
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      if (hash === '#credits' || hash === '#subscription') {
+        setTimeout(() => {
+          const element = document.getElementById(hash.substring(1));
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      }
+    }
   }, []);
 
   const handleGetStarted = (item: any, type: string) => {
@@ -156,7 +169,7 @@ export default function Pricing() {
         </div>
 
         {/* Credits Section */}
-        <div style={{ marginBottom: '48px' }}>
+        <div id="credits" style={{ marginBottom: '48px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Buy Credits</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             {creditPackages.map((pkg) => (
@@ -206,7 +219,7 @@ export default function Pricing() {
         </div>
 
         {/* Subscription Section */}
-        <div>
+        <div id="subscription">
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Or Subscribe for Unlimited</h2>
           
           {/* Billing Toggle */}
