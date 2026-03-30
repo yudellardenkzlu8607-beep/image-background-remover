@@ -135,12 +135,12 @@ export default function Pricing() {
           <p style={{ fontSize: '16px', color: '#6b7280' }}>Credits never expire. Subscribe for unlimited usage.</p>
         </div>
 
-        {/* Two Big Buttons */}
+        {/* Two Big Buttons - Click to scroll */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '48px' }}>
-          <div style={{
+          <a href="#credits" style={{
             borderRadius: '12px', padding: '24px',
             border: '2px solid #e5e7eb', backgroundColor: 'white',
-            textAlign: 'center', cursor: 'pointer',
+            textAlign: 'center', textDecoration: 'none',
             transition: 'all 0.2s'
           }}>
             <div style={{ fontSize: '32px', marginBottom: '8px' }}>💳</div>
@@ -151,12 +151,12 @@ export default function Pricing() {
               <span style={{ padding: '4px 12px', backgroundColor: '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$15 / 200 credits</span>
               <span style={{ padding: '4px 12px', backgroundColor: '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$39 / 500 credits</span>
             </div>
-          </div>
+          </a>
           
-          <div style={{
+          <a href="#subscription" style={{
             borderRadius: '12px', padding: '24px',
             border: '2px solid #2563eb', backgroundColor: '#eff6ff',
-            textAlign: 'center', cursor: 'pointer'
+            textAlign: 'center', textDecoration: 'none'
           }}>
             <div style={{ fontSize: '32px', marginBottom: '8px' }}>📋</div>
             <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Subscribe</h3>
@@ -165,7 +165,7 @@ export default function Pricing() {
               <span style={{ padding: '4px 12px', backgroundColor: 'white', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$10/month</span>
               <span style={{ padding: '4px 12px', backgroundColor: '#16a34a', color: 'white', borderRadius: '9999px', fontSize: '12px' }}>$69/year Save 42%</span>
             </div>
-          </div>
+          </a>
         </div>
 
         {/* Credits Section */}
