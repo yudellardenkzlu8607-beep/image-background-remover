@@ -53,6 +53,7 @@ export default function Pricing() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [email, setEmail] = useState('');
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const creditsRef = useRef<HTMLDivElement>(null);
   const subscriptionRef = useRef<HTMLDivElement>(null);
 
@@ -85,16 +86,59 @@ export default function Pricing() {
   }, []);
 
   const handleGetStarted = (item: any, type: string) => {
+    if (!session) {
+      alert('Please sign in first to make a purchase');
+      window.location.href = '/api/auth/signin/google';
+      return;
+    }
     setSelectedItem({ ...item, type });
     setShowCheckout(true);
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!email) {
       alert('Please enter your email');
       return;
     }
-    alert('PayPal integration coming soon! You will be redirected to complete your purchase.');
+
+    // 创建 PayPal 订单/订阅
+    try {
+      const body: any = {};
+      
+      if (selectedItem.type === 'credits') {
+        body.type = 'credits';
+        body.packageId = selectedItem.id;
+      } else {
+        body.type = 'subscription';
+        body.planId = selectedItem.id === 'yearly' || selectedItem.id === 'monthly' 
+          ? (billingCycle === 'yearly' ? 'yearly' : 'monthly')
+          : selectedItem.id;
+      }
+
+      const response = await fetch('/api/payment/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      // 跳转到 PayPal 支付
+      if (data.links) {
+        const approvalUrl = data.links.find((link: any) => link.rel === 'approve' || link.rel === 'payer-action');
+        if (approvalUrl) {
+          window.location.href = approvalUrl.href;
+        }
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Payment initialization failed. Please try again.');
+    }
   };
 
   const getPrice = (item: any) => {
@@ -389,16 +433,23 @@ export default function Pricing() {
             {/* PayPal Button */}
             <button
               onClick={handleCheckout}
+              disabled={checkoutLoading}
               style={{
                 width: '100%', padding: '12px',
-                backgroundColor: '#ffc439', color: '#003087',
+                backgroundColor: checkoutLoading ? '#ccc' : '#ffc439', 
+                color: '#003087',
                 border: 'none', borderRadius: '8px',
                 fontWeight: '600', fontSize: '14px',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                cursor: checkoutLoading ? 'not-allowed' : 'pointer', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
               }}
             >
-              <span style={{ fontSize: '16px' }}>P</span>
-              Pay with PayPal
+              {checkoutLoading ? 'Processing...' : (
+                <>
+                  <span style={{ fontSize: '16px' }}>P</span>
+                  Pay with PayPal
+                </>
+              )}
             </button>
             
             {/* Secure Note */}
