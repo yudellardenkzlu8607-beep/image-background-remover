@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 export default function Subscription() {
   const [session, setSession] = useState<any>(null);
+  const [credits, setCredits] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -17,6 +18,7 @@ export default function Subscription() {
           fetch('/api/user/info')
             .then(res => res.json())
             .then(userData => {
+              setCredits(userData.credits);
               setSubscription(userData.subscription);
               setLoading(false);
             });
@@ -28,8 +30,8 @@ export default function Subscription() {
   }, []);
 
   const handleCancel = () => {
-    if (confirm('Are you sure you want to cancel your subscription? You will lose access to Pro features at the end of your billing period.')) {
-      alert('Subscription cancellation coming soon. Please contact support to cancel.');
+    if (confirm('Are you sure you want to cancel your subscription?')) {
+      alert('Subscription cancellation coming soon. Please contact support.');
     }
   };
 
@@ -46,7 +48,7 @@ export default function Subscription() {
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <h1 style={{ fontSize: '24px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>Please sign in</h1>
-          <p style={{ color: '#6b7280', marginBottom: '16px' }}>You need to be signed in to view your subscription.</p>
+          <p style={{ color: '#6b7280', marginBottom: '16px' }}>You need to be signed in to view your account.</p>
           <Link href="/api/auth/signin/google" style={{ padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: '500' }}>
             Sign in with Google
           </Link>
@@ -55,6 +57,8 @@ export default function Subscription() {
     );
   }
 
+  const hasSubscription = subscription && subscription.status === 'active';
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       {/* Header */}
@@ -62,41 +66,63 @@ export default function Subscription() {
         <div style={{ maxWidth: '768px', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <Link href="/" style={{ color: '#6b7280', textDecoration: 'none', fontSize: '14px' }}>← Back</Link>
-            <h1 style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>Subscription</h1>
+            <h1 style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>My Account</h1>
           </div>
-          <Link href="/profile" style={{ padding: '8px 16px', borderRadius: '8px', backgroundColor: '#f3f4f6', color: '#374151', textDecoration: 'none', fontSize: '14px' }}>
-            My Account
-          </Link>
         </div>
       </header>
 
       {/* Main Content */}
       <div style={{ maxWidth: '768px', margin: '0 auto', padding: '48px 24px' }}>
-        {subscription ? (
+        {/* Credits Section */}
+        <div style={{ backgroundColor: hasSubscription ? '#f0fdf4' : '#eff6ff', border: `1px solid ${hasSubscription ? '#bbf7d0' : '#bfdbfe'}`, borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Credits Balance</h2>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Current Balance</p>
+              <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.balance || 0}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total Used</p>
+              <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.totalUsed || 0}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Purchased</p>
+              <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.totalPurchased || 0}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Bonus Received</p>
+              <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.bonusReceived || 0}</p>
+            </div>
+          </div>
+          
+          {hasSubscription && (
+            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#22c55e', fontSize: '16px' }}>✓</span>
+              <span style={{ fontSize: '14px', color: '#374151' }}>Unlimited mode active - no credits needed</span>
+            </div>
+          )}
+        </div>
+
+        {/* Subscription Section */}
+        {hasSubscription ? (
           <>
-            {/* Current Plan */}
             <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div>
                   <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                    {subscription.plan === 'pro' ? 'Pro Plan' : 'Free Plan'}
+                    Pro {subscription.plan === 'pro-yearly' ? 'Yearly' : 'Monthly'}
                   </h2>
                   <p style={{ fontSize: '14px', color: '#6b7280' }}>
-                    {subscription.status === 'active' ? 'Active' : subscription.status}
+                    {subscription.plan === 'pro-yearly' ? '$69/year' : '$10/month'}
                   </p>
                 </div>
-                {subscription.status === 'active' && (
-                  <span style={{ backgroundColor: '#22c55e', color: 'white', padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: '500' }}>
-                    Active
-                  </span>
-                )}
+                <span style={{ backgroundColor: '#22c55e', color: 'white', padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: '500' }}>
+                  Active
+                </span>
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                <div>
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Billing</p>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>$10/month</p>
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div>
                   <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Next billing</p>
                   <p style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>
@@ -105,9 +131,7 @@ export default function Subscription() {
                 </div>
                 <div>
                   <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Status</p>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>
-                    {subscription.status === 'active' ? 'Auto-renew' : subscription.status}
-                  </p>
+                  <p style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Auto-renew</p>
                 </div>
               </div>
             </div>
@@ -127,39 +151,36 @@ export default function Subscription() {
                 Cancel Subscription
               </button>
             </div>
-
-            {/* Features */}
-            <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>Your Pro Features</h3>
-              </div>
-              <div style={{ padding: '16px' }}>
-                {['Unlimited photos per month', 'Priority processing', '24/7 support', 'Commercial license', 'API access', 'Remove watermark'].map((feature, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 0', borderBottom: i < 5 ? '1px solid #f3f4f6' : 'none' }}>
-                    <span style={{ color: '#22c55e' }}>✓</span>
-                    <span style={{ fontSize: '14px', color: '#374151' }}>{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </>
         ) : (
-          /* No Subscription */
-          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '28px' }}>
-              👤
-            </div>
-            <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
-              You&apos;re on the Free plan
+          <div style={{ textAlign: 'center', padding: '32px', border: '1px solid #e5e7eb', borderRadius: '12px', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
+              No Active Subscription
             </h2>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px', maxWidth: '400px', margin: '0 auto 24px' }}>
-              Upgrade to Pro for unlimited access, priority processing, and more features.
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>
+              Subscribe to Pro for unlimited access with no credits needed.
             </p>
-            <Link href="/pricing" style={{ display: 'inline-block', padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: '500' }}>
-              View Pro Plans
+            <Link href="/pricing" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: '500' }}>
+              View Plans
             </Link>
           </div>
         )}
+
+        {/* Quick Links */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+          <Link href="/pricing" style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', textAlign: 'center', textDecoration: 'none' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>💳</div>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Buy Credits</div>
+          </Link>
+          <Link href="/pricing" style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', textAlign: 'center', textDecoration: 'none' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📋</div>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Subscribe</div>
+          </Link>
+          <Link href="/profile" style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', textAlign: 'center', textDecoration: 'none' }}>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📊</div>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>History</div>
+          </Link>
+        </div>
       </div>
 
       {/* Footer */}
