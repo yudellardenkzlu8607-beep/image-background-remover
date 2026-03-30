@@ -1,0 +1,11 @@
+name = "image-background-remover"
+compatibility_date = "2026-03-21"
+compatibility_flags = ["nodejs_compat_populate_process_env"]
+
+[vars]
+NEXTAUTH_URL = "https://image-background-remover.space"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "image-background-remover-db"
+database_id = "a4be0ed5-350c-45e2-ab33-d9e8da51c008"

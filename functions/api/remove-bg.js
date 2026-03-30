@@ -8,28 +8,37 @@ export async function onRequestPost(context) {
   const { env } = context;
   
   try {
-    // 1. 从 Cookie 获取 session token
+    // 1. 从 Cookie 获取 session
     const cookies = context.request.headers.get('Cookie') || '';
-    const sessionToken = cookies.match(/next-auth-session-token=([^;]+)/)?.[1];
+    const sessionCookie = cookies.split('; ').find(c => c.startsWith('session='));
     
-    // 获取用户信息（用于积分检查）
     let userId = null;
-    if (sessionToken) {
-      const sessionData = await env.SESSIONS.get(sessionToken);
-      if (sessionData) {
-        const session = JSON.parse(sessionData);
-        userId = session.user?.id;
+    let session = null;
+    
+    if (sessionCookie) {
+      try {
+        session = JSON.parse(atob(sessionCookie.split('=')[1]));
+        if (session.user?.id) {
+          userId = session.user.id;
+        }
+      } catch (e) {
+        console.error('Session parse error:', e);
       }
     }
     
     // 2. 未登录用户：检查今日使用次数（限制1次）
     if (!userId) {
       const clientIP = context.request.headers.get('CF-Connecting-IP') || 
-                      context.request.headers.get('X-Forwarded-For')?.split(',')[0] || 'unknown';
+                      context.request.headers.get('X-Forwarded-For')?.split(',')[0] || 'anonymous';
       const today = new Date().toISOString().split('T')[0];
       
-      const dailyKey = `daily:${clientIP}:${today}`;
-      const usedCount = parseInt(await env.RATE_LIMIT.get(dailyKey) || '0');
+      // 使用 D1 记录未登录用户的使用
+      const existingUsage = await env.DB.prepare(`
+        SELECT count FROM daily_usage 
+        WHERE user_id = ? AND usage_date = ?
+      `).bind(`anon_${clientIP}`, today).first();
+      
+      const usedCount = existingUsage?.count || 0;
       
       if (usedCount >= 1) {
         return new Response(JSON.stringify({ 
@@ -42,15 +51,23 @@ export async function onRequestPost(context) {
       }
       
       // 增加使用计数
-      await env.RATE_LIMIT.put(dailyKey, String(usedCount + 1), { expirationTtl: 86400 });
+      await env.DB.prepare(`
+        INSERT INTO daily_usage (user_id, usage_date, count)
+        VALUES (?, ?, 1)
+        ON CONFLICT(user_id, usage_date) DO UPDATE SET count = count + 1
+      `).bind(`anon_${clientIP}`, today).run();
     } 
     // 3. 已登录用户：检查积分
     else {
       let credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
       
+      // 如果用户积分记录不存在，创建一个
       if (!credits) {
-        await env.DB.prepare('INSERT INTO user_credits (user_id, balance, total_purchased, total_used, bonus_received) VALUES (?, 0, 0, 0, 0)').bind(userId).run();
-        credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
+        await env.DB.prepare(`
+          INSERT INTO user_credits (user_id, balance, total_purchased, total_used, bonus_received)
+          VALUES (?, 0, 0, 0, 0)
+        `).bind(userId).run();
+        credits = { balance: 0, bonus_received: 0, total_used: 0 };
       }
       
       // 首次使用：注册赠送3积分

@@ -7,27 +7,27 @@ export async function onRequestGet(context) {
   try {
     const { env } = context;
     
-    // 从 Cookie 获取 session token
+    // 从 Cookie 获取 session
     const cookies = context.request.headers.get('Cookie') || '';
-    const sessionToken = cookies.match(/next-auth-session-token=([^;]+)/)?.[1];
+    const sessionCookie = cookies.split('; ').find(c => c.startsWith('session='));
     
-    if (!sessionToken) {
+    if (!sessionCookie) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    // 获取 session
-    const sessionData = await env.SESSIONS.get(sessionToken);
-    if (!sessionData) {
+    let session;
+    try {
+      session = JSON.parse(atob(sessionCookie.split('=')[1]));
+    } catch (e) {
       return new Response(JSON.stringify({ error: 'Invalid session' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    const session = JSON.parse(sessionData);
     const userId = session.user?.id;
     
     if (!userId) {
