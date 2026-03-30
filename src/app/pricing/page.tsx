@@ -5,118 +5,76 @@ import Link from 'next/link';
 
 const plans = [
   {
-    id: 'starter',
-    name: '体验版',
-    price: 9,
-    period: '月',
-    credits: 50,
-    perCredit: 0.18,
-    tagline: '适合轻度使用',
+    id: 'free',
+    name: 'Free',
+    price: 0,
+    period: 'month',
+    credits: 5,
+    creditsPeriod: 'month',
+    perCredit: 0,
+    tagline: 'Get started with basic background removal',
     features: [
-      '每月 50 次使用',
-      '标准处理速度',
-      '邮件支持',
-      '有效期 30 天',
-      '商用授权'
+      '5 photos per month',
+      'Standard processing',
+      'Basic support',
+      'No credit card required'
     ],
     highlight: false,
     badge: '',
-    cta: '开始体验'
+    cta: 'Get started',
+    annualPrice: 0,
+    annualNote: ''
   },
   {
     id: 'pro',
-    name: '专业版',
-    price: 39,
-    period: '月',
-    credits: 400,
-    perCredit: 0.10,
-    tagline: '最适合个人用户',
+    name: 'Pro',
+    price: 10,
+    period: 'month',
+    credits: null,
+    creditsPeriod: 'unlimited',
+    perCredit: 0,
+    tagline: 'Unlimited access for professionals',
     features: [
-      '每月 400 次使用',
-      '优先处理队列',
-      '7×24 在线支持',
-      '有效期 30 天',
-      '商用授权',
-      'API 访问权限'
+      'Unlimited photos per month',
+      'Priority processing',
+      '24/7 support',
+      'Commercial license',
+      'API access'
     ],
     highlight: true,
-    badge: '最受欢迎',
-    cta: '升级专业版'
-  },
-  {
-    id: 'team',
-    name: '团队版',
-    price: 99,
-    period: '月',
-    credits: 1200,
-    perCredit: 0.08,
-    tagline: '适合团队/企业',
-    features: [
-      '每月 1200 次使用',
-      '极速处理队列',
-      '专属客户经理',
-      '有效期 30 天',
-      '完整商用授权',
-      '多账号协作',
-      '发票开具'
-    ],
-    highlight: false,
-    badge: '',
-    cta: '团队咨询'
+    badge: 'Most popular',
+    cta: 'Get started',
+    annualPrice: 69,
+    annualPerMonth: 5.75,
+    annualNote: 'Billed annually'
   }
 ];
 
-const yearlyPlan = {
-  name: '年付特惠',
-  price: 199,
-  period: '年',
-  credits: 600,
-  perMonth: 16.6,
-  savings: '省 43%',
-  tagline: '适合长期用户',
-  features: [
-    '每月约 50 次使用',
-    '优先处理队列',
-    '7×24 在线支持',
-    '有效期 365 天',
-    '完整商用授权'
-  ],
-  badge: '限时优惠'
-};
-
-const comparisons = [
-  { feature: '每日免费次数', free: '1次', pro: '无限制' },
-  { feature: '每月使用额度', free: '0', pro: '400次' },
-  { feature: '处理速度', free: '标准', pro: '优先' },
-  { feature: '商用授权', free: '❌', pro: '✅' },
-  { feature: '客户支持', free: '无', pro: '7×24' },
-  { feature: 'API 访问', free: '❌', pro: '✅' }
-];
-
-const testimonials = [
+const faqItems = [
   {
-    name: '李设计师',
-    avatar: '👨‍🎨',
-    content: '每天要给客户处理几十张产品图，用了这个工具效率提升了好几倍！',
-    rating: 5
+    q: 'Can I cancel anytime?',
+    a: 'Yes, you can cancel your subscription at any time with no hidden fees.'
   },
   {
-    name: '王电商',
-    avatar: '👩‍💼',
-    content: '电商主图需要透明背景，这个工具效果很好，批量处理超方便。',
-    rating: 5
+    q: 'What payment methods do you accept?',
+    a: 'We accept PayPal and all major credit cards (Visa, Mastercard, American Express).'
   },
   {
-    name: '张摄影师',
-    avatar: '📷',
-    content: '修图必备，省去了手动抠图的时间，成本也很划算。',
-    rating: 5
+    q: 'Is there a free trial?',
+    a: 'Yes! Every user starts with 5 free photos per month. No credit card required.'
+  },
+  {
+    q: 'Do unused photos roll over?',
+    a: 'No, your monthly photo allowance does not roll over to the next month.'
   }
 ];
 
 export default function Pricing() {
   const [session, setSession] = useState<any>(null);
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null);
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -125,22 +83,48 @@ export default function Pricing() {
       .catch(console.error);
   }, []);
 
-  const getPrice = (plan: typeof plans[0]) => {
-    if (billingCycle === 'yearly' && plan.id === 'pro') {
-      return Math.round(plan.price * 12 * 0.5);
+  const handleSelectPlan = (plan: typeof plans[0]) => {
+    if (plan.id === 'free') {
+      alert('Free plan activated! You can start using the service now.');
+      return;
     }
-    return plan.price;
+    setSelectedPlan(plan);
+    setShowCheckout(true);
+  };
+
+  const handleCheckout = () => {
+    if (!email) {
+      alert('Please enter your email address');
+      return;
+    }
+    alert('Payment integration coming soon! You will be redirected to PayPal checkout.');
+  };
+
+  const getPrice = (plan: typeof plans[0]) => {
+    if (plan.id === 'free') return 0;
+    return billingCycle === 'annual' ? plan.annualPrice : plan.price;
+  };
+
+  const getPriceDisplay = (plan: typeof plans[0]) => {
+    if (plan.id === 'free') return '$0';
+    if (billingCycle === 'annual') return `$${plan.annualPrice}`;
+    return `$${plan.price}`;
+  };
+
+  const getPricePeriod = (plan: typeof plans[0]) => {
+    if (plan.id === 'free') return '/month';
+    if (billingCycle === 'annual') return '/year';
+    return '/month';
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <main className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <header className="bg-white border-b">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-gray-600 hover:text-gray-800 flex items-center gap-2">
-              <span>←</span>
-              <span>返回</span>
+            <Link href="/" className="text-gray-600 hover:text-gray-800">
+              ← Back
             </Link>
           </div>
           <div className="flex items-center gap-3">
@@ -149,110 +133,106 @@ export default function Pricing() {
                 href="/profile"
                 className="px-4 py-2 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
               >
-                我的积分
+                My Account
               </Link>
             ) : (
               <Link
                 href="/api/auth/signin/google"
                 className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
               >
-                登录 / 注册
+                Sign in
               </Link>
             )}
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-16 text-center px-4">
-        <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-          <span>🎁</span>
-          <span>新用户注册即送 3 次免费试用</span>
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Page Title */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+            Simple, transparent pricing
+          </h1>
+          <p className="text-lg text-gray-500">
+            No hidden fees. Cancel anytime.
+          </p>
         </div>
-        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent">
-          简单透明，按需付费
-        </h1>
-        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-          无隐藏费用，无订阅陷阱。AI 驱动的背景移除，让你的工作更高效
-        </p>
-        
-        {/* Billing Toggle */}
-        <div className="inline-flex items-center bg-gray-100 rounded-full p-1 mb-8">
-          <button
-            onClick={() => setBillingCycle('monthly')}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-              billingCycle === 'monthly' 
-                ? 'bg-white shadow text-gray-900' 
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            月付
-          </button>
-          <button
-            onClick={() => setBillingCycle('yearly')}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-              billingCycle === 'yearly' 
-                ? 'bg-white shadow text-gray-900' 
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            年付
-            <span className="ml-2 text-green-600 text-xs">省 50%</span>
-          </button>
-        </div>
-      </section>
 
-      {/* Pricing Cards */}
-      <section className="max-w-6xl mx-auto px-4 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Billing Toggle */}
+        {plans.some(p => p.annualPrice) && (
+          <div className="flex items-center justify-center gap-3 mb-10">
+            <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-gray-900' : 'text-gray-400'}`}>
+              Monthly
+            </span>
+            <button
+              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'annual' : 'monthly')}
+              className={`relative w-14 h-7 rounded-full transition-colors ${
+                billingCycle === 'annual' ? 'bg-green-500' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                  billingCycle === 'annual' ? 'left-8' : 'left-1'
+                }`}
+              />
+            </button>
+            <span className={`text-sm font-medium ${billingCycle === 'annual' ? 'text-gray-900' : 'text-gray-400'}`}>
+              Annual
+              <span className="ml-1 text-green-600 font-semibold">-42%</span>
+            </span>
+          </div>
+        )}
+
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           {plans.map((plan) => (
             <div 
               key={plan.id}
-              className={`relative rounded-3xl p-8 transition-all duration-300 ${
+              className={`relative rounded-2xl p-8 border-2 transition-all ${
                 plan.highlight 
-                  ? 'bg-gradient-to-b from-amber-50 to-white border-2 border-amber-400 shadow-xl shadow-amber-200/50 scale-105' 
-                  : 'bg-white border border-gray-200 hover:shadow-lg hover:border-gray-300'
+                  ? 'border-blue-500 bg-blue-50/30' 
+                  : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               {plan.badge && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-gradient-to-r from-amber-400 to-amber-500 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
                     {plan.badge}
                   </span>
                 </div>
               )}
               
+              {/* Plan Name & Tagline */}
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">{plan.name}</h3>
                 <p className="text-sm text-gray-500">{plan.tagline}</p>
               </div>
               
+              {/* Price */}
               <div className="text-center mb-6">
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-sm text-gray-400">¥</span>
                   <span className="text-5xl font-bold text-gray-900">
-                    {getPrice(plan)}
+                    {getPriceDisplay(plan)}
                   </span>
-                  <span className="text-gray-500">/{plan.period}</span>
+                  <span className="text-gray-500">{getPricePeriod(plan)}</span>
                 </div>
-                {billingCycle === 'yearly' && plan.id === 'pro' && (
-                  <div className="text-sm text-green-600 font-medium mt-1">
-                    相当于 ¥{Math.round(getPrice(plan)/12)}/月
-                  </div>
+                {plan.annualNote && billingCycle === 'annual' && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    {plan.annualNote} (${plan.annualPerMonth}/month)
+                  </p>
                 )}
               </div>
               
-              <div className="text-center mb-6 pb-6 border-b border-gray-100">
-                <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full">
-                  <span className="text-lg">⚡</span>
-                  <span className="font-bold">{plan.credits}</span>
-                  <span className="text-sm">次/月</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  约 ¥{plan.perCredit}/次
+              {/* Credits */}
+              <div className="text-center mb-6 pb-6 border-b border-gray-200">
+                <p className="text-gray-700">
+                  {plan.credits ? `${plan.credits} photos` : 'Unlimited photos'} 
+                  <span className="text-gray-400"> / month</span>
                 </p>
               </div>
               
+              {/* Features */}
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm">
@@ -262,13 +242,14 @@ export default function Pricing() {
                 ))}
               </ul>
               
+              {/* CTA Button */}
               <button
-                className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
+                onClick={() => handleSelectPlan(plan)}
+                className={`w-full py-3 rounded-lg font-semibold transition-all ${
                   plan.highlight
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 shadow-lg shadow-amber-200'
+                    ? 'bg-blue-500 text-white hover:bg-blue-600'
                     : 'bg-gray-900 text-white hover:bg-gray-800'
                 }`}
-                onClick={() => alert('支付功能即将上线，敬请期待！')}
               >
                 {plan.cta}
               </button>
@@ -276,174 +257,156 @@ export default function Pricing() {
           ))}
         </div>
 
-        {/* Yearly Banner */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-8 text-white text-center">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-              {yearlyPlan.badge}
-            </span>
+        {/* Annual Discount Highlight */}
+        {billingCycle === 'annual' && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center mb-8">
+            <p className="text-green-700 font-medium">
+              🌿 You save $51 per year with annual billing!
+            </p>
           </div>
-          <h3 className="text-2xl font-bold mb-2">{yearlyPlan.name}</h3>
-          <p className="text-white/80 mb-4">{yearlyPlan.tagline}</p>
-          <div className="flex items-baseline justify-center gap-2 mb-4">
-            <span className="text-sm text-white/70">¥</span>
-            <span className="text-5xl font-bold">199</span>
-            <span className="text-white/70">/年</span>
-          </div>
-          <p className="text-sm text-white/80 mb-6">
-            相当于 ¥{yearlyPlan.perMonth}/月 · 约 50次/月
+        )}
+
+        {/* Need More Section */}
+        <div className="text-center mb-12">
+          <p className="text-gray-500">
+            Need more? <a href="mailto:support@example.com" className="text-blue-500 hover:underline">Contact us</a> for custom pricing.
           </p>
-          <div className="flex items-center justify-center gap-6 text-sm mb-6">
-            {yearlyPlan.features.slice(0, 4).map((f, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span>✓</span>
-                <span>{f}</span>
+        </div>
+
+        {/* Comparison */}
+        <div className="border-t pt-8 mb-8">
+          <h2 className="text-xl font-bold text-center mb-6">What's included</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 text-gray-500 font-medium">Feature</th>
+                  <th className="text-center py-3 text-gray-500 font-medium">Free</th>
+                  <th className="text-center py-3 text-gray-900 font-medium bg-blue-50 rounded-t-lg">Pro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Photos per month', '5', 'Unlimited'],
+                  ['Processing speed', 'Standard', 'Priority'],
+                  ['Commercial license', '❌', '✅'],
+                  ['API access', '❌', '✅'],
+                  ['Support', 'Basic', '24/7']
+                ].map((row, i) => (
+                  <tr key={i} className="border-b">
+                    <td className="py-3 text-gray-700">{row[0]}</td>
+                    <td className="py-3 text-center text-gray-600">{row[1]}</td>
+                    <td className="py-3 text-center bg-blue-50/50 font-medium">{row[2]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* FAQ */}
+        <div className="border-t pt-8">
+          <h2 className="text-xl font-bold text-center mb-6">Frequently asked questions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {faqItems.map((item, i) => (
+              <div key={i} className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">Q: {item.q}</h4>
+                <p className="text-sm text-gray-600">{item.a}</p>
               </div>
             ))}
           </div>
-          <button
-            className="bg-white text-indigo-600 px-8 py-3 rounded-xl font-semibold hover:bg-indigo-50 transition"
-            onClick={() => alert('支付功能即将上线，敬请期待！')}
-          >
-            立即节省 {yearlyPlan.savings}
-          </button>
         </div>
-      </section>
+      </div>
 
-      {/* Comparison Table */}
-      <section className="max-w-4xl mx-auto px-4 pb-16">
-        <h2 className="text-2xl font-bold text-center mb-8">免费版 vs 专业版</h2>
-        <div className="bg-white rounded-2xl border overflow-hidden">
-          <div className="grid grid-cols-3 bg-gray-50">
-            <div className="p-4 font-medium text-gray-500">功能</div>
-            <div className="p-4 font-medium text-center text-gray-400">免费版</div>
-            <div className="p-4 font-medium text-center bg-amber-50">专业版</div>
-          </div>
-          {comparisons.map((item, i) => (
-            <div key={i} className="grid grid-cols-3 border-t">
-              <div className="p-4 text-gray-700">{item.feature}</div>
-              <div className="p-4 text-center text-gray-600">{item.free}</div>
-              <div className="p-4 text-center bg-amber-50/50 font-medium text-gray-900">{item.pro}</div>
-            </div>
-          ))}
-          <div className="grid grid-cols-3 border-t bg-gray-50">
-            <div className="p-4 font-medium text-gray-700">价格</div>
-            <div className="p-4 text-center text-gray-400">免费</div>
-            <div className="p-4 text-center bg-amber-50 font-medium">
-              <span className="text-amber-600">¥39/月</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="max-w-6xl mx-auto px-4 pb-16">
-        <h2 className="text-2xl font-bold text-center mb-8">用户怎么说</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((t, i) => (
-            <div key={i} className="bg-white rounded-2xl p-6 border shadow-sm">
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(t.rating)].map((_, j) => (
-                  <span key={j} className="text-amber-400">★</span>
-                ))}
-              </div>
-              <p className="text-gray-700 mb-4">{t.content}</p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl">
-                  {t.avatar}
-                </div>
-                <span className="font-medium text-gray-900">{t.name}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Trust Badges */}
-      <section className="bg-gray-50 py-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex flex-wrap items-center justify-center gap-8 text-gray-500">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🔒</span>
-              <span>支付安全</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">💯</span>
-              <span>7天退款保证</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">📱</span>
-              <span>随时取消</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">⚡</span>
-              <span>即时开通</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="max-w-3xl mx-auto px-4 py-16">
-        <h2 className="text-2xl font-bold text-center mb-8">常见问题</h2>
-        <div className="space-y-4">
-          {[
-            { q: '积分会过期吗？', a: '购买的积分有效期为购买后30天，注册赠送的积分无有效期限制。' },
-            { q: '可以退款吗？', a: '7天内未使用的积分可申请全额退款，联系客服即可办理。' },
-            { q: '如何查看积分余额？', a: '登录后访问个人中心，可以查看当前余额、累计使用和交易记录。' },
-            { q: '支持哪些支付方式？', a: '支持 PayPal、信用卡等多种支付方式，更多方式即将上线。' }
-          ].map((item, i) => (
-            <div key={i} className="bg-white rounded-xl p-6 border">
-              <h4 className="font-bold text-lg mb-2">Q: {item.q}</h4>
-              <p className="text-gray-600">{item.a}</p>
-            </div>
-          ))}
-        </div>
-        
-        <div className="mt-8 text-center">
-          <Link
-            href="/faq"
-            className="text-amber-600 hover:text-amber-700 font-medium"
-          >
-            查看完整 FAQ →
-          </Link>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-gradient-to-r from-gray-900 to-gray-800 py-16">
-        <div className="max-w-4xl mx-auto px-4 text-center text-white">
-          <h3 className="text-3xl font-bold mb-4">准备好开始了吗？</h3>
-          <p className="text-gray-400 mb-8">
-            注册即送 3 次免费试用，体验 AI 驱动的背景移除
-          </p>
-          <div className="flex gap-4 justify-center">
-            {session ? (
-              <Link
-                href="/"
-                className="px-8 py-4 bg-amber-500 text-gray-900 rounded-xl font-semibold hover:bg-amber-400 transition"
+      {/* Checkout Modal */}
+      {showCheckout && selectedPlan && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">Order Summary</h3>
+              <button 
+                onClick={() => setShowCheckout(false)}
+                className="text-gray-400 hover:text-gray-600"
               >
-                开始使用
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/api/auth/signin/google"
-                  className="px-8 py-4 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition"
-                >
-                  免费注册试用
-                </Link>
-                <button
-                  onClick={() => alert('客服联系方式即将上线')}
-                  className="px-8 py-4 bg-transparent border border-white/30 text-white rounded-xl font-semibold hover:bg-white/10 transition"
-                >
-                  联系我们
+                ✕
+              </button>
+            </div>
+            
+            {/* Plan Summary */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium">{selectedPlan.name} Plan</span>
+                <span className="font-bold">
+                  {getPriceDisplay(selectedPlan)}{getPricePeriod(selectedPlan)}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500">
+                {selectedPlan.credits ? `${selectedPlan.credits} photos` : 'Unlimited photos'} per month
+              </p>
+              {billingCycle === 'annual' && (
+                <p className="text-sm text-green-600 mt-1">
+                  Annual billing - save 42%
+                </p>
+              )}
+            </div>
+            
+            {/* Email Input */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            {/* Payment Method */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Payment method
+              </label>
+              <div className="flex gap-3">
+                <button className="flex-1 py-3 border-2 border-blue-500 bg-blue-50 rounded-lg font-medium">
+                  <span className="text-blue-600">PayPal</span>
                 </button>
-              </>
-            )}
+                <button className="flex-1 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50">
+                  Card
+                </button>
+              </div>
+            </div>
+            
+            {/* CTA */}
+            <button
+              onClick={handleCheckout}
+              className="w-full py-4 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 transition"
+            >
+              Get started
+            </button>
+            
+            {/* Note */}
+            <p className="text-xs text-gray-500 text-center mt-4">
+              Your free photos will be credited when you upgrade.
+            </p>
           </div>
         </div>
-      </section>
+      )
+
+      {/* Footer */}
+      <footer className="bg-gray-50 py-8 mt-12">
+        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-gray-500">
+          <p>© 2026 Image Background Remover. All rights reserved.</p>
+          <div className="flex justify-center gap-4 mt-2">
+            <a href="/faq" className="hover:text-gray-700">FAQ</a>
+            <a href="mailto:support@example.com" className="hover:text-gray-700">Contact</a>
+            <a href="#" className="hover:text-gray-700">Privacy</a>
+            <a href="#" className="hover:text-gray-700">Terms</a>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
