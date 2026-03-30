@@ -160,7 +160,20 @@ export default function Home() {
           <span className="text-sm text-gray-500">Powered by AI</span>
         </div>
         {session ? (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Credits 和 Subscribe 按钮 */}
+            <a
+              href="/pricing#credits"
+              className="px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+            >
+              Credits
+            </a>
+            <a
+              href="/pricing#subscription"
+              className="px-3 py-1 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition font-medium"
+            >
+              Subscribe
+            </a>
             {/* 积分显示 */}
             <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-full">
               <span className="text-amber-600">⭐</span>
@@ -171,10 +184,10 @@ export default function Home() {
             )}
             <span className="text-sm text-gray-700">{session.user?.name}</span>
             <a 
-              href="/profile"
+              href="/subscription"
               className="px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
             >
-              个人中心
+              Account
             </a>
             <button
               onClick={handleSignOut}
