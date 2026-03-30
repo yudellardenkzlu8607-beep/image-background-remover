@@ -6,5 +6,6 @@
   "/faq/page": "app/faq/page.js",
   "/page": "app/page.js",
   "/pricing/page": "app/pricing/page.js",
+  "/subscription/page": "app/subscription/page.js",
   "/profile/page": "app/profile/page.js"
 }

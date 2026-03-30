@@ -8,42 +8,65 @@ const plans = [
     id: 'free',
     name: 'Free',
     price: '$0',
+    period: 'month',
     tagline: 'Get started with basic background removal',
-    features: ['5 photos per month', 'Standard processing', 'Basic support', 'No credit card required'],
+    features: ['5 photos per month', 'Standard processing', 'Basic support'],
     highlight: false,
   },
   {
     id: 'pro',
     name: 'Pro',
     price: '$10',
+    period: 'month',
     tagline: 'Unlimited access for professionals',
     features: ['Unlimited photos per month', 'Priority processing', '24/7 support', 'Commercial license', 'API access', 'Remove watermark'],
     highlight: true,
-    annualPrice: '$69/year',
+    annualPrice: '$69',
+    annualPeriod: '/year',
     annualSaving: 'Save $51',
   }
-];
-
-const comparisonFeatures = [
-  { name: 'Photos per month', free: '5', pro: 'Unlimited' },
-  { name: 'Processing speed', free: 'Standard', pro: 'Priority' },
-  { name: 'Commercial license', free: false, pro: true },
-  { name: 'API access', free: false, pro: true },
-  { name: 'Remove watermark', free: false, pro: true },
-  { name: 'Background options', free: 'Original only', pro: 'Original + White + Transparent + Custom' },
-  { name: 'Priority support', free: 'Basic', pro: '24/7' },
 ];
 
 export default function Pricing() {
   const [session, setSession] = useState<any>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     fetch('/api/auth/session')
       .then(res => res.json())
-      .then(data => setSession(data))
+      .then(data => {
+        setSession(data);
+        if (data?.user?.email) setEmail(data.user.email);
+      })
       .catch(console.error);
   }, []);
+
+  const handleGetStarted = (plan: any) => {
+    if (plan.id === 'free') {
+      window.location.href = '/';
+      return;
+    }
+    setSelectedPlan(plan);
+    setShowCheckout(true);
+  };
+
+  const handleCheckout = () => {
+    if (!email) {
+      alert('Please enter your email');
+      return;
+    }
+    alert('PayPal integration coming soon! You will be redirected to complete your subscription.');
+  };
+
+  const getPrice = () => {
+    if (!selectedPlan) return '';
+    if (selectedPlan.id === 'free') return '$0';
+    if (billingCycle === 'annual') return selectedPlan.annualPrice;
+    return selectedPlan.price;
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
@@ -106,11 +129,11 @@ export default function Pricing() {
                   <span style={{ fontSize: '28px', fontWeight: '600', color: '#111827' }}>
                     {billingCycle === 'annual' && plan.annualPrice ? plan.annualPrice : plan.price}
                   </span>
-                  {plan.annualPrice && (
-                    <span style={{ fontSize: '14px', color: '#6b7280' }}>/year</span>
-                  )}
+                  <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                    {billingCycle === 'annual' ? (plan.annualPeriod || '/year') : `/${plan.period}`}
+                  </span>
                 </div>
-                {plan.annualSaving && (
+                {plan.annualSaving && billingCycle === 'annual' && (
                   <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: '500' }}>{plan.annualSaving}</span>
                 )}
               </div>
@@ -125,6 +148,7 @@ export default function Pricing() {
               </ul>
               
               <button
+                onClick={() => handleGetStarted(plan)}
                 style={{
                   width: '100%', padding: '10px', borderRadius: '8px',
                   fontWeight: '500', fontSize: '14px',
@@ -184,10 +208,18 @@ export default function Pricing() {
             <div style={{ padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#111827', textAlign: 'center', backgroundColor: '#eff6ff' }}>Pro</div>
           </div>
           {/* Table Rows */}
-          {comparisonFeatures.map((feature, i) => (
+          {[
+            { name: 'Photos per month', free: '5', pro: 'Unlimited' },
+            { name: 'Processing speed', free: 'Standard', pro: 'Priority' },
+            { name: 'Commercial license', free: false, pro: true },
+            { name: 'API access', free: false, pro: true },
+            { name: 'Remove watermark', free: false, pro: true },
+            { name: 'Background options', free: 'Original only', pro: 'Multiple' },
+            { name: 'Priority support', free: 'Basic', pro: '24/7' },
+          ].map((feature, i) => (
             <div key={i} style={{
               display: 'grid', gridTemplateColumns: '2fr 1fr 1fr',
-              borderBottom: i < comparisonFeatures.length - 1 ? '1px solid #e5e7eb' : 'none'
+              borderBottom: i < 6 ? '1px solid #e5e7eb' : 'none'
             }}>
               <div style={{ padding: '12px 16px', fontSize: '13px', color: '#374151' }}>{feature.name}</div>
               <div style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280', textAlign: 'center' }}>
@@ -211,6 +243,66 @@ export default function Pricing() {
           </p>
         </div>
       </div>
+
+      {/* Checkout Modal */}
+      {showCheckout && selectedPlan && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '16px', maxWidth: '400px', width: '100%', padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '600' }}>Subscribe to {selectedPlan.name}</h3>
+              <button onClick={() => setShowCheckout(false)} style={{ color: '#9ca3af', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
+            </div>
+            
+            {/* Plan Summary */}
+            <div style={{ backgroundColor: '#f9fafb', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontWeight: '500' }}>{selectedPlan.name} Monthly</span>
+                <span style={{ fontWeight: '600' }}>{getPrice()}/mo</span>
+              </div>
+              {billingCycle === 'annual' && (
+                <p style={{ fontSize: '12px', color: '#16a34a' }}>Billed annually - save 42%</p>
+              )}
+              <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                {selectedPlan.features[0]}, {selectedPlan.features[1]}
+              </p>
+            </div>
+            
+            {/* Email Input */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                Email address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', outline: 'none' }}
+              />
+            </div>
+            
+            {/* PayPal Button */}
+            <button
+              onClick={handleCheckout}
+              style={{
+                width: '100%', padding: '12px',
+                backgroundColor: '#ffc439', color: '#003087',
+                border: 'none', borderRadius: '8px',
+                fontWeight: '600', fontSize: '14px',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+              }}
+            >
+              <span style={{ fontSize: '16px' }}>P</span>
+              PayPal
+            </button>
+            
+            {/* Secure Note */}
+            <p style={{ fontSize: '11px', color: '#9ca3af', textAlign: 'center', marginTop: '12px' }}>
+              Secure payment processed by PayPal. Cancel anytime.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer style={{ backgroundColor: '#f9fafb', padding: '24px 0', borderTop: '1px solid #e5e7eb' }}>
