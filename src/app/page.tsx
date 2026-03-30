@@ -199,9 +199,15 @@ export default function Home() {
             </a>
             <a
               href="/pricing"
-              className="px-3 py-1 text-sm rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition"
+              className="px-3 py-1 text-sm rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
             >
-              定价
+              Credits
+            </a>
+            <a
+              href="/pricing"
+              className="px-3 py-1 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition font-medium"
+            >
+              Subscribe
             </a>
           </div>
         )}
