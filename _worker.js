@@ -8,6 +8,7 @@ import { handleAuthCallback } from './functions/api/auth/callback/google.js';
 import { handleAuthSession } from './functions/api/auth/session.js';
 import { handleAuthSignout } from './functions/api/auth/signout.js';
 import { handlePaymentCreateOrder } from './functions/api/payment/create-order.js';
+import { handlePaymentCreateOrderNew } from './functions/api/payment/create-order-new.js';
 import { handlePaymentCaptureOrder } from './functions/api/payment/capture-order.js';
 import { handlePaymentCaptureSubscription } from './functions/api/payment/capture-subscription.js';
 import { handlePaymentWebhook } from './functions/api/payment/webhook.js';
@@ -78,6 +79,10 @@ export const onRequestPost = async (context) => {
     
     if (cleanPath === 'api/payment/create-order') {
       return await handlePaymentCreateOrder(context);
+    }
+    
+    if (cleanPath === 'api/payment/create-subscription') {
+      return await handlePaymentCreateOrderNew(context);
     }
     
     if (cleanPath === 'api/payment/capture-order') {
