@@ -103,9 +103,9 @@ async function createSubscription(planId, userId, userEmail) {
 
   const accessToken = await getAccessToken();
 
-  // 创建订阅
+  // 创建订阅 - 使用简化方式
   const subscriptionPayload = {
-    plan_id: `PLAN_${planId.toUpperCase()}`,
+    plan_id: planId,  // 直接使用 planId
     custom_id: JSON.stringify({ userId, planId, type: 'subscription' }),
     subscriber: {
       email_address: userEmail,
