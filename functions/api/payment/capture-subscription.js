@@ -74,11 +74,16 @@ export async function onRequestPost(context) {
       }
 
       // Insert or update subscription
+      console.log('Inserting subscription for user:', userId, 'plan:', planId);
       await env.DB.prepare(`
         INSERT OR REPLACE INTO subscriptions 
         (user_id, plan, status, credits_granted, current_period_start, current_period_end, updated_at)
         VALUES (?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP)
       `).bind(userId, planId, plan.credits, currentPeriodStart, currentPeriodEnd);
+      
+      console.log('Subscription inserted, checking...');
+      const checkSub = await env.DB.prepare('SELECT * FROM subscriptions WHERE user_id = ?').bind(userId).first();
+      console.log('Subscription check result:', checkSub);
 
       // Give bonus credits for subscribing
       let credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
