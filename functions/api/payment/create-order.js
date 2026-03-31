@@ -100,6 +100,8 @@ async function createCreditOrder(packageId, userId, userEmail) {
 async function createSubscription(planId, userId, userEmail) {
   const plan = SUBSCRIPTION_PLANS[planId];
   if (!plan) throw new Error('Invalid plan');
+  
+  console.log('Creating subscription for plan:', planId, 'price:', plan.price, 'interval:', plan.interval);
 
   const accessToken = await getAccessToken();
 
@@ -134,6 +136,7 @@ async function createSubscription(planId, userId, userEmail) {
   }
 
   // 创建定价计划
+  console.log("Plan payload - price:", plan.price, "type:", typeof plan.price, "interval:", plan.interval);
   const planPayload = {
     product_id: productId,
     name: plan.name,
