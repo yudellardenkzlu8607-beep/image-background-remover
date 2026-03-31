@@ -57,7 +57,7 @@ async function createCreditOrder(packageId, userId, userEmail) {
   const orderPayload = {
     intent: 'CAPTURE',
     application_context: {
-      return_url: 'https://image-background-remover.space/pricing?success=true&type=credits',
+      return_url: 'https://image-background-remover.space/pricing?success=true',
       cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
       brand_name: 'Image Background Remover',
       locale: 'en-US',
@@ -113,7 +113,7 @@ async function createSubscription(planId, userId, userEmail) {
     application_context: {
       brand_name: 'Image Background Remover',
       locale: 'en-US',
-      return_url: 'https://image-background-remover.space/pricing?success=true&type=subscription',
+      return_url: 'https://image-background-remover.space/pricing?success=true',
       cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
       user_action: 'SUBSCRIBE_NOW',
     },
