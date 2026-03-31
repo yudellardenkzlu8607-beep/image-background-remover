@@ -50,6 +50,9 @@ export async function onRequestPost(context) {
     const currentPeriodStart = now.toISOString();
     const currentPeriodEnd = new Date(now.getTime() + plan.period * 24 * 60 * 60 * 1000).toISOString();
 
+    // Bonus credits for subscribing
+    const bonusCredits = planId === 'yearly' ? 100 : 20;
+
     // Activate subscription in database
     if (env.DB) {
       // Check if subscription table exists, if not create it
@@ -77,8 +80,7 @@ export async function onRequestPost(context) {
         VALUES (?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP)
       `).bind(userId, planId, plan.credits, currentPeriodStart, currentPeriodEnd);
 
-      // Also give some bonus credits for subscribing
-      const bonusCredits = planId === 'yearly' ? 100 : 20;
+      // Give bonus credits for subscribing
       let credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
       
       if (!credits) {
