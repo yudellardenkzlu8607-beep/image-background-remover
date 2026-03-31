@@ -194,7 +194,7 @@ async function createSubscription(planId, userId, userEmail) {
     application_context: {
       brand_name: 'Image Background Remover',
       locale: 'en-US',
-      return_url: 'https://image-background-remover.space/pricing?success=true&type=subscription',
+      return_url: 'https://image-background-remover.space/pricing?success=true&type=subscription&planId=' + planId,
       cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
       user_action: 'SUBSCRIBE_NOW',
     },

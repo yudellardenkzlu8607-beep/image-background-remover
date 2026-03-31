@@ -73,11 +73,12 @@ export default function Pricing() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
-      const type = params.get('type');
+      const type = params.get('type') || 'credits';
       const token = params.get('token');
+      const planId = params.get('planId') || 'monthly';
+      
       if (token) {
-        // Capture the payment
-        capturePayment(token, type);
+        capturePayment(token, type, planId);
       }
       setSuccessMessage(type === 'credits' ? 'Payment successful! Credits have been applied to your account.' : 'Subscription activated successfully!');
     }
@@ -86,7 +87,7 @@ export default function Pricing() {
     }
   }, []);
 
-  const capturePayment = async (token: string, type: string) => {
+  const capturePayment = async (token: string, type: string, planId: string = 'monthly') => {
     try {
       let response;
       if (type === 'subscription') {
@@ -94,7 +95,7 @@ export default function Pricing() {
         response = await fetch('/api/payment/capture-subscription', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subscriptionId: token, planId: 'monthly' }),
+          body: JSON.stringify({ subscriptionId: token, planId: planId }),
         });
       } else {
         // For credits, call capture-order
