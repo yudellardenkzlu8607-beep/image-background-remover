@@ -103,9 +103,81 @@ async function createSubscription(planId, userId, userEmail) {
 
   const accessToken = await getAccessToken();
 
-  // 创建订阅 - 使用简化方式
+  // 首先创建产品
+  let productId = 'PROD_IMG_BG_REMOVER';
+  
+  const productResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/catalogs/products`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: 'Image Background Remover Pro',
+      description: 'Unlimited access to AI background removal',
+      type: 'DIGITAL',
+      category: 'SOFTWARE',
+    }),
+  });
+
+  if (productResponse.ok) {
+    const product = await productResponse.json();
+    productId = product.id;
+  }
+
+  // 创建定价计划
+  const planPayload = {
+    product_id: productId,
+    name: plan.name,
+    description: plan.description,
+    billing_cycles: [
+      {
+        frequency: {
+          interval_unit: plan.interval,
+          interval_count: 1,
+        },
+        tenure: 'REGULAR',
+        sequence: 1,
+        pricing_scheme: {
+          fixed_value: {
+            value: plan.price,
+            currency_code: 'USD',
+          },
+        },
+      },
+    ],
+    payment_preferences: {
+      auto_bill_outstanding: true,
+      setup_fee: {
+        value: '0',
+        currency_code: 'USD',
+      },
+      setup_fee_failure_action: 'CONTINUE',
+      payment_failure_threshold: 3,
+    },
+  };
+
+  const planResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/billing/plans`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(planPayload),
+  });
+
+  let billingPlanId;
+  if (planResponse.ok) {
+    const billingPlan = await planResponse.json();
+    billingPlanId = billingPlan.id;
+  } else {
+    // 如果已存在，使用已有计划ID
+    billingPlanId = `PLAN_${planId.toUpperCase()}`;
+  }
+
+  // 创建订阅
   const subscriptionPayload = {
-    plan_id: planId,  // 直接使用 planId
+    plan_id: billingPlanId,
     custom_id: JSON.stringify({ userId, planId, type: 'subscription' }),
     subscriber: {
       email_address: userEmail,
