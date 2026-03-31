@@ -14,6 +14,7 @@ import { handlePaymentWebhook } from './functions/api/payment/webhook.js';
 import { handleUserInfo } from './functions/api/user/info.js';
 import { handleCreditsCheck } from './functions/api/user/credits-check.js';
 import { handleTransactions } from './functions/api/user/transactions.js';
+import { handleDebugSubscriptions } from './functions/api/debug/subscriptions.js';
 import { handleRemoveBg } from './functions/api/remove-bg.js';
 
 export const onRequestGet = async (context) => {
@@ -49,10 +50,12 @@ export const onRequestGet = async (context) => {
     if (cleanPath === 'api/user/transactions') {
       return await handleTransactions(context);
     }
-
-    return new Response('Not Found', { status: 404 });
-  } catch (error) {
-    console.error('[Worker Error]', error);
+    
+    if (cleanPath === 'api/debug/subscriptions') {
+      return await handleDebugSubscriptions(context);
+    }
+    
+    if (cleanPath === 'api/remove-bg') {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -91,6 +94,10 @@ export const onRequestPost = async (context) => {
     
     if (cleanPath === 'api/remove-bg') {
       return await handleRemoveBg(context);
+    }
+
+    if (cleanPath === 'api/debug/subscriptions') {
+      return await handleDebugSubscriptions(context);
     }
 
     return new Response('Not Found', { status: 404 });
