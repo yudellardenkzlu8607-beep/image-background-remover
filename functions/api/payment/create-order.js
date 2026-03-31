@@ -144,10 +144,10 @@ async function createSubscription(planId, userId, userEmail) {
           interval_unit: plan.interval,
           interval_count: 1,
         },
-        tenure: 'REGULAR',
+        tenure_type: 'REGULAR',
         sequence: 1,
         pricing_scheme: {
-          fixed_value: {
+          fixed_price: {
             value: plan.price,
             currency_code: 'USD',
           },
