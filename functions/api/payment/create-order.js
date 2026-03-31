@@ -104,25 +104,33 @@ async function createSubscription(planId, userId, userEmail) {
   const accessToken = await getAccessToken();
 
   // 首先创建产品
-  let productId = 'PROD_IMG_BG_REMOVER';
+  let productId;
   
-  const productResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/catalogs/products`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      name: 'Image Background Remover Pro',
-      description: 'Unlimited access to AI background removal',
-      type: 'DIGITAL',
-      category: 'SOFTWARE',
-    }),
-  });
+  try {
+    const productResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/catalogs/products`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: 'Image Background Remover Pro',
+        description: 'Unlimited access to AI background removal',
+        type: 'DIGITAL',
+        category: 'SOFTWARE',
+      }),
+    });
 
-  if (productResponse.ok) {
-    const product = await productResponse.json();
-    productId = product.id;
+    if (productResponse.ok) {
+      const product = await productResponse.json();
+      productId = product.id;
+    } else {
+      const err = await productResponse.text();
+      console.log('Product creation error:', err);
+      productId = 'PROD_' + Date.now(); // 使用随机ID
+    }
+  } catch (e) {
+    productId = 'PROD_' + Date.now();
   }
 
   // 创建定价计划
@@ -171,8 +179,9 @@ async function createSubscription(planId, userId, userEmail) {
     const billingPlan = await planResponse.json();
     billingPlanId = billingPlan.id;
   } else {
-    // 如果已存在，使用已有计划ID
-    billingPlanId = `PLAN_${planId.toUpperCase()}`;
+    // 如果创建失败，返回错误信息
+    const errorText = await planResponse.text();
+    throw new Error(`Failed to create billing plan: ${errorText}`);
   }
 
   // 创建订阅
