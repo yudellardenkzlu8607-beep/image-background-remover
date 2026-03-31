@@ -45,12 +45,17 @@ export async function onRequestGet(context) {
       credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
     }
     
-    // 获取订阅信息
-    const subscription = await env.DB.prepare(`
-      SELECT * FROM subscriptions 
-      WHERE user_id = ? AND status = 'active'
-      ORDER BY created_at DESC LIMIT 1
-    `).bind(userId).first();
+    // 获取订阅信息 - 改为简单的查询
+    let subscription = null;
+    try {
+      subscription = await env.DB.prepare(`
+        SELECT * FROM subscriptions 
+        WHERE user_id = ?
+        ORDER BY created_at DESC LIMIT 1
+      `).bind(userId).first();
+    } catch (e) {
+      console.log('Subscription query error:', e.message);
+    }
     
     // 获取今日使用次数
     const today = new Date().toISOString().split('T')[0];
