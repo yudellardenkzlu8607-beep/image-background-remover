@@ -47,14 +47,26 @@ export async function onRequestGet(context) {
     
     // 获取订阅信息 - 改为简单的查询
     let subscription = null;
-    try {
-      subscription = await env.DB.prepare(`
-        SELECT * FROM subscriptions 
-        WHERE user_id = ?
-        ORDER BY created_at DESC LIMIT 1
-      `).bind(userId).first();
-    } catch (e) {
-      console.log('Subscription query error:', e.message);
+    if (!env.DB) {
+      console.log('DB not available');
+    } else {
+      try {
+        // First check if table exists
+        const tableCheck = await env.DB.prepare(`
+          SELECT name FROM sqlite_master WHERE type='table' AND name='subscriptions'
+        `).first();
+        console.log('Table exists:', tableCheck);
+        
+        if (tableCheck) {
+          subscription = await env.DB.prepare(`
+            SELECT * FROM subscriptions 
+            WHERE user_id = ?
+            ORDER BY created_at DESC LIMIT 1
+          `).bind(userId).first();
+        }
+      } catch (e) {
+        console.log('Subscription query error:', e.message);
+      }
     }
     
     // 获取今日使用次数
