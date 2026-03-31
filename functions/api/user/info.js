@@ -45,24 +45,52 @@ export async function onRequestGet(context) {
       credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
     }
     
-    // 获取订阅信息 - 改为简单的查询
+    // 获取订阅信息 - 多重检查
     let subscription = null;
-    if (!env.DB) {
-      console.log('DB not available');
-    } else {
+    if (env.DB) {
       try {
-        // First check if table exists
-        const tableCheck = await env.DB.prepare(`
-          SELECT name FROM sqlite_master WHERE type='table' AND name='subscriptions'
-        `).first();
-        console.log('Table exists:', tableCheck);
+        // 方法1: 直接查询 subscriptions 表
+        subscription = await env.DB.prepare(`
+          SELECT * FROM subscriptions 
+          WHERE user_id = ?
+          ORDER BY created_at DESC LIMIT 1
+        `).bind(userId).first();
         
-        if (tableCheck) {
-          subscription = await env.DB.prepare(`
-            SELECT * FROM subscriptions 
-            WHERE user_id = ?
+        // 方法2: 如果表不存在或没记录，检查积分交易记录
+        if (!subscription) {
+          const subTransactions = await env.DB.prepare(`
+            SELECT * FROM credit_transactions 
+            WHERE user_id = ? AND description LIKE '%Subscribe%'
             ORDER BY created_at DESC LIMIT 1
           `).bind(userId).first();
+          
+          if (subTransactions) {
+            // 从描述中判断订阅类型
+            const isYearly = subTransactions.description.toLowerCase().includes('yearly') || subTransactions.amount >= 100;
+            subscription = {
+              plan: isYearly ? 'yearly' : 'monthly',
+              status: 'active',
+              creditsGranted: subTransactions.amount,
+              currentPeriodEnd: new Date(Date.now() + (isYearly ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString()
+            };
+          }
+        }
+        
+        // 方法3: 根据积分判断是否有订阅（订阅 yearly 送 100，monthly 送 20）
+        if (!subscription && credits.bonus_received >= 100) {
+          subscription = {
+            plan: 'yearly',
+            status: 'active',
+            creditsGranted: credits.bonus_received,
+            currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+          };
+        } else if (!subscription && credits.bonus_received >= 20) {
+          subscription = {
+            plan: 'monthly',
+            status: 'active',
+            creditsGranted: credits.bonus_received,
+            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          };
         }
       } catch (e) {
         console.log('Subscription query error:', e.message);
@@ -92,8 +120,8 @@ export async function onRequestGet(context) {
       subscription: subscription ? {
         plan: subscription.plan,
         status: subscription.status,
-        creditsGranted: subscription.credits_granted,
-        currentPeriodEnd: subscription.current_period_end
+        creditsGranted: subscription.creditsGranted || subscription.credits_granted,
+        currentPeriodEnd: subscription.currentPeriodEnd || subscription.current_period_end
       } : null,
       dailyUsage: dailyUsage ? dailyUsage.count : 0,
       pricing: {
