@@ -57,7 +57,7 @@ async function createCreditOrder(packageId, userId, userEmail) {
   const orderPayload = {
     intent: 'CAPTURE',
     application_context: {
-      return_url: 'https://image-background-remover.space/pricing?success=true',
+      return_url: 'https://image-background-remover.space/pricing?success=true&type=credits',
       cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
       brand_name: 'Image Background Remover',
       locale: 'en-US',
