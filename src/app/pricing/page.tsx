@@ -88,15 +88,29 @@ export default function Pricing() {
 
   const capturePayment = async (token: string, type: string) => {
     try {
-      const response = await fetch('/api/payment/capture-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, type }),
-      });
+      let response;
+      if (type === 'subscription') {
+        // For subscriptions, call capture-subscription
+        response = await fetch('/api/payment/capture-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscriptionId: token, planId: 'monthly' }),
+        });
+      } else {
+        // For credits, call capture-order
+        response = await fetch('/api/payment/capture-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, type }),
+        });
+      }
       const data = await response.json();
       if (data.success) {
+        setSuccessMessage(data.message);
         // Refresh session to get updated credits
         fetch('/api/auth/session').then(res => res.json()).then(setSession);
+      } else {
+        setSuccessMessage(data.error || 'Payment processing failed');
       }
     } catch (error) {
       console.error('Capture error:', error);

@@ -194,7 +194,7 @@ async function createSubscription(planId, userId, userEmail) {
     application_context: {
       brand_name: 'Image Background Remover',
       locale: 'en-US',
-      return_url: 'https://image-background-remover.space/pricing?success=true',
+      return_url: 'https://image-background-remover.space/pricing?success=true&type=subscription',
       cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
       user_action: 'SUBSCRIBE_NOW',
     },
@@ -268,6 +268,11 @@ export async function onRequestPost(context) {
         });
       }
       result = await createSubscription(planId, session.user.id, session.user.email);
+      
+      // For subscriptions, return the subscription ID for activation
+      if (result.id) {
+        result.subscriptionId = result.id;
+      }
       
     } else {
       return new Response(JSON.stringify({ error: 'Invalid type' }), {
