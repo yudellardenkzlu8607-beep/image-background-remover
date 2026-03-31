@@ -54,6 +54,8 @@ export default function Pricing() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [email, setEmail] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [canceledMessage, setCanceledMessage] = useState('');
   const creditsRef = useRef<HTMLDivElement>(null);
   const subscriptionRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +68,40 @@ export default function Pricing() {
       })
       .catch(console.error);
   }, []);
+
+  // Check for success/canceled in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      const type = params.get('type');
+      const token = params.get('token');
+      if (token) {
+        // Capture the payment
+        capturePayment(token, type);
+      }
+      setSuccessMessage(type === 'credits' ? 'Payment successful! Credits have been applied to your account.' : 'Subscription activated successfully!');
+    }
+    if (params.get('canceled') === 'true') {
+      setCanceledMessage('Payment was canceled. Please try again.');
+    }
+  }, []);
+
+  const capturePayment = async (token: string, type: string) => {
+    try {
+      const response = await fetch('/api/payment/capture-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, type }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        // Refresh session to get updated credits
+        fetch('/api/auth/session').then(res => res.json()).then(setSession);
+      }
+    } catch (error) {
+      console.error('Capture error:', error);
+    }
+  };
 
   // Track scroll position to highlight active section
   useEffect(() => {
@@ -101,7 +137,6 @@ export default function Pricing() {
       return;
     }
 
-    // 创建 PayPal 订单/订阅
     try {
       const body: any = {};
       
@@ -128,7 +163,6 @@ export default function Pricing() {
         return;
       }
 
-      // 跳转到 PayPal 支付
       if (data.links) {
         const approvalUrl = data.links.find((link: any) => link.rel === 'approve' || link.rel === 'payer-action');
         if (approvalUrl) {
@@ -177,6 +211,18 @@ export default function Pricing() {
         </div>
       </header>
 
+      {/* Success/Canceled Messages */}
+      {successMessage && (
+        <div style={{ backgroundColor: '#d1fae5', border: '1px solid #34d399', borderRadius: '8px', padding: '16px', margin: '16px auto', maxWidth: '896px', textAlign: 'center', color: '#065f46' }}>
+          ✓ {successMessage}
+        </div>
+      )}
+      {canceledMessage && (
+        <div style={{ backgroundColor: '#fee2e2', border: '1px solid #f87171', borderRadius: '8px', padding: '16px', margin: '16px auto', maxWidth: '896px', textAlign: 'center', color: '#991b1b' }}>
+          ✕ {canceledMessage}
+        </div>
+      )}
+
       {/* Main Content */}
       <div style={{ maxWidth: '896px', margin: '0 auto', padding: '48px 24px' }}>
         {/* Page Title */}
@@ -187,7 +233,7 @@ export default function Pricing() {
           <p style={{ fontSize: '16px', color: '#6b7280' }}>Credits never expire. Subscribe for unlimited usage.</p>
         </div>
 
-        {/* Two Big Buttons - Click to scroll, highlight based on scroll position */}
+        {/* Two Big Buttons */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '48px' }}>
           <a 
             href="#credits-anchor" 
@@ -204,33 +250,6 @@ export default function Pricing() {
             <div style={{ fontSize: '32px', marginBottom: '8px' }}>💳</div>
             <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Buy Credits</h3>
             <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>One-time purchase. Credits never expire.</p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <span style={{ padding: '4px 12px', backgroundColor: activeSection === 'credits' ? 'white' : '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$5 / 50 credits</span>
-              <span style={{ padding: '4px 12px', backgroundColor: activeSection === 'credits' ? 'white' : '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$15 / 200 credits</span>
-              <span style={{ padding: '4px 12px', backgroundColor: activeSection === 'credits' ? 'white' : '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$39 / 500 credits</span>
-            </div>
-          </a>
-          
-          <a 
-            href="#subscription-anchor"
-            onClick={(e) => { e.preventDefault(); subscriptionRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
-            style={{
-              borderRadius: '12px', padding: '24px',
-              border: activeSection === 'subscription' ? '2px solid #2563eb' : '2px solid #e5e7eb',
-              backgroundColor: activeSection === 'subscription' ? '#eff6ff' : 'white',
-              textAlign: 'center', textDecoration: 'none',
-              transition: 'all 0.2s',
-              boxShadow: activeSection === 'subscription' ? '0 0 0 3px rgba(37, 99, 235, 0.2)' : 'none'
-            }}
-          >
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>💳</div>
-            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Buy Credits</h3>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>One-time purchase. Credits never expire.</p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <span style={{ padding: '4px 12px', backgroundColor: '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$5 / 50 credits</span>
-              <span style={{ padding: '4px 12px', backgroundColor: '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$15 / 200 credits</span>
-              <span style={{ padding: '4px 12px', backgroundColor: '#f3f4f6', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$39 / 500 credits</span>
-            </div>
           </a>
           
           <a 
@@ -248,10 +267,6 @@ export default function Pricing() {
             <div style={{ fontSize: '32px', marginBottom: '8px' }}>📋</div>
             <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Subscribe</h3>
             <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Unlimited usage. Cancel anytime.</p>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <span style={{ padding: '4px 12px', backgroundColor: 'white', borderRadius: '9999px', fontSize: '12px', color: '#374151' }}>$10/month</span>
-              <span style={{ padding: '4px 12px', backgroundColor: '#16a34a', color: 'white', borderRadius: '9999px', fontSize: '12px' }}>$69/year Save 42%</span>
-            </div>
           </a>
         </div>
 
@@ -284,7 +299,6 @@ export default function Pricing() {
                 <div style={{ backgroundColor: '#f3f4f6', borderRadius: '8px', padding: '16px', marginBottom: '16px', textAlign: 'center' }}>
                   <span style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{pkg.credits}</span>
                   <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '4px' }}>credits</span>
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>${pkg.pricePerCredit}/credit</p>
                 </div>
                 
                 <button
@@ -397,7 +411,6 @@ export default function Pricing() {
               <button onClick={() => setShowCheckout(false)} style={{ color: '#9ca3af', background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}>✕</button>
             </div>
             
-            {/* Order Summary */}
             <div style={{ backgroundColor: '#f9fafb', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontWeight: '500' }}>{selectedItem.name}</span>
@@ -408,15 +421,8 @@ export default function Pricing() {
               <p style={{ fontSize: '12px', color: '#6b7280' }}>
                 {selectedItem.credits ? `${selectedItem.credits} credits` : 'Unlimited photos per month'}
               </p>
-              {selectedItem.type === 'subscription' && selectedItem.id === 'yearly' && (
-                <p style={{ fontSize: '12px', color: '#16a34a', marginTop: '4px' }}>Save 42% with annual billing</p>
-              )}
-              {selectedItem.type === 'credits' && (
-                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Credits never expire</p>
-              )}
             </div>
             
-            {/* Email Input */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
                 Email address
@@ -430,7 +436,6 @@ export default function Pricing() {
               />
             </div>
             
-            {/* PayPal Button */}
             <button
               onClick={handleCheckout}
               disabled={checkoutLoading}
@@ -452,7 +457,6 @@ export default function Pricing() {
               )}
             </button>
             
-            {/* Secure Note */}
             <p style={{ fontSize: '11px', color: '#9ca3af', textAlign: 'center', marginTop: '12px' }}>
               Secure payment processed by PayPal
             </p>
@@ -460,7 +464,6 @@ export default function Pricing() {
         </div>
       )}
 
-      {/* Footer */}
       <footer style={{ backgroundColor: '#f9fafb', padding: '24px 0', borderTop: '1px solid #e5e7eb' }}>
         <div style={{ maxWidth: '896px', margin: '0 auto', textAlign: 'center', fontSize: '12px', color: '#9ca3af' }}>
           <p>© 2026 Image Background Remover. All rights reserved.</p>
