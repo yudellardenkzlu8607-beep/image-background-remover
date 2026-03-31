@@ -41,8 +41,8 @@ const CREDIT_PACKAGES = {
 
 // 订阅计划
 const SUBSCRIPTION_PLANS = {
-  monthly: { name: 'Pro Monthly', price: '10.00', interval: 'MONTH', description: 'Unlimited access - Monthly' },
-  yearly: { name: 'Pro Yearly', price: '69.00', interval: 'YEAR', description: 'Unlimited access - Yearly (Save 42%)' },
+  monthly: { name: 'Pro Monthly', price: 10.00, interval: 'MONTH', description: 'Unlimited access - Monthly' },
+  yearly: { name: 'Pro Yearly', price: 69.00, interval: 'YEAR', description: 'Unlimited access - Yearly (Save 42%)' },
 };
 
 /**
