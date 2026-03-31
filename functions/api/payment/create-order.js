@@ -139,7 +139,7 @@ async function createSubscription(planId, userId, userEmail) {
   console.log("Plan payload - price:", plan.price, "type:", typeof plan.price, "interval:", plan.interval);
   const planPayload = {
     product_id: productId,
-    name: plan.name + ' ' + Date.now(),,
+    name: plan.name + ' ' + Date.now(),
     description: plan.description,
     billing_cycles: [
       {
