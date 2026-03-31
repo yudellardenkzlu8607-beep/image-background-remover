@@ -11,7 +11,7 @@ const PAYPAL_CONFIG = {
 
 // 获取 Access Token
 export async function getAccessToken() {
-  const auth = Buffer.from(`${PAYPAL_CONFIG.clientId}:${PAYPAL_CONFIG.clientSecret}`).toString('base64');
+  const auth = btoa(`${PAYPAL_CONFIG.clientId}:${PAYPAL_CONFIG.clientSecret}`);
   
   const response = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/oauth2/token`, {
     method: 'POST',
