@@ -293,13 +293,9 @@ export async function onRequestPost(context) {
       });
     }
 
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
 
-  } catch (error) { console.error("Full error:", error); return new Response(JSON.stringify({ error: error.message, stack: error.stack }), { status: 500, headers: { "Content-Type": "application/json" } }); }
-    console.error('Create order error:', error);
+  } catch (error) {
+    console.error("Create order error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
