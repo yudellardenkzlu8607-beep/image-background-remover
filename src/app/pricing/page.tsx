@@ -172,6 +172,19 @@ export default function Pricing() {
         body: JSON.stringify(body),
       });
 
+      // Check if response is OK before parsing JSON
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Payment API error:', response.status, text);
+        try {
+          const data = JSON.parse(text);
+          alert('Payment error: ' + (data.error || 'Unknown error'));
+        } catch {
+          alert('Payment failed with status ' + response.status + ': ' + text.substring(0, 100));
+        }
+        return;
+      }
+
       const data = await response.json();
 
       console.log('Payment response:', data); // Debug log
