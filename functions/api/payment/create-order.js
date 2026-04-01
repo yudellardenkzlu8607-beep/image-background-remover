@@ -3,7 +3,7 @@
  */
 
 // Pure JS base64 decode for Cloudflare Workers
-function atobPolyfill(str: string): string {
+function atobPolyfill(str) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
   let output = '';
   str = str.replace(/=+$/, '');
