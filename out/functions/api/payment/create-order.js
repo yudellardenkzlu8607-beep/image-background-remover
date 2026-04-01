@@ -1,45 +1,66 @@
 /**
- * PayPal API 工具
+ * Payment Create Order - Simplified for Cloudflare Workers
  */
 
-// Pure JS base64 decode for Cloudflare Workers
-function atobPolyfill(str) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+// Base64 polyfills using TextEncoder/TextDecoder approach
+const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+function base64Encode(str) {
+  let output = '';
+  const bytes = new TextEncoder().encode(str);
+  for (let i = 0; i < bytes.length; i += 3) {
+    const b1 = bytes[i];
+    const b2 = i + 1 < bytes.length ? bytes[i + 1] : 0;
+    const b3 = i + 2 < bytes.length ? bytes[i + 2] : 0;
+    output += base64Chars[b1 >> 2];
+    output += base64Chars[((b1 & 3) << 4) | (b2 >> 4)];
+    output += i + 1 < bytes.length ? base64Chars[((b2 & 15) << 2) | (b3 >> 6)] : '=';
+    output += i + 2 < bytes.length ? base64Chars[b3 & 63] : '=';
+  }
+  return output;
+}
+
+function base64Decode(str) {
   let output = '';
   str = str.replace(/=+$/, '');
-  for (let bc = 0, bs = 0, buffer, i = 0; (buffer = str.charAt(i++)); ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
-    if (buffer.charCodeAt(0) === 61) break;
+  for (let i = 0; i < str.length; i += 4) {
+    const b1 = base64Chars.indexOf(str[i]);
+    const b2 = base64Chars.indexOf(str[i + 1]);
+    const b3 = str[i + 2] !== undefined ? base64Chars.indexOf(str[i + 2]) : 0;
+    const b4 = str[i + 3] !== undefined ? base64Chars.indexOf(str[i + 3]) : 0;
+    output += String.fromCharCode((b1 << 2) | (b2 >> 4));
+    if (str[i + 2] !== '=') output += String.fromCharCode(((b2 & 15) << 4) | (b3 >> 2));
+    if (str[i + 3] !== '=') output += String.fromCharCode(((b3 & 3) << 6) | b4);
   }
   return output;
 }
 
-// Pure JS base64 encode
-function btoaPolyfill(str) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-  let output = '';
-  for (let i = 0; i < str.length; i += 3) {
-    const a = str.charCodeAt(i);
-    const b = i + 1 < str.length ? str.charCodeAt(i + 1) : 0;
-    const c = i + 2 < str.length ? str.charCodeAt(i + 2) : 0;
-    output += chars[a >> 2] + chars[((a & 3) << 4) | (b >> 4)] + (i + 1 < str.length ? chars[((b & 15) << 2) | (c >> 6)] : '=') + (i + 2 < str.length ? chars[c & 63] : '=');
-  }
-  return output;
-}
+// Override global functions
+globalThis.atob = base64Decode;
+globalThis.btoa = base64Encode;
 
-globalThis.atob = globalThis.atob || atobPolyfill;
-globalThis.btoa = globalThis.btoa || btoaPolyfill;
-
-// PayPal API 配置
+// PayPal API config
 const PAYPAL_CONFIG = {
   clientId: 'Aeo2PFuZgfEdi3ya3lf8h5lgdxZw3_ex3cZJAuTCyFjl_HWHuV5F86ov4rZcWS_Q-5Cd58cfU9iP32b0',
   clientSecret: 'EJjM46c5uz477zrf1YIxG2eqA0vPgJZN6QA_oEkucqJASdjETRWtxpCsZQ9ittHETkAdRRTtkPX0Lmui',
   baseUrl: 'https://api-m.sandbox.paypal.com',
 };
 
-// 获取 Access Token
+// Subscription plans
+const SUBSCRIPTION_PLANS = {
+  monthly: { name: 'Monthly', price: 10, interval: 'MONTH' },
+  yearly: { name: 'Yearly', price: 69, interval: 'YEAR' },
+};
+
+// Credit packages
+const CREDIT_PACKAGES = {
+  starter: { name: 'Starter', price: 5, credits: 50 },
+  professional: { name: 'Professional', price: 15, credits: 200, popular: true },
+  enterprise: { name: 'Enterprise', price: 39, credits: 500 },
+};
+
 async function getAccessToken() {
   const auth = btoa(`${PAYPAL_CONFIG.clientId}:${PAYPAL_CONFIG.clientSecret}`);
-  
   const response = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
@@ -48,230 +69,35 @@ async function getAccessToken() {
     },
     body: 'grant_type=client_credentials',
   });
-
+  
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to get access token: ${error}`);
+    throw new Error('Failed to get access token');
   }
-
+  
   const data = await response.json();
   return data.access_token;
 }
 
-// 积分包定价
-const CREDIT_PACKAGES = {
-  starter: { name: 'Starter', credits: 50, price: '5.00', description: '50 credits - Starter Pack' },
-  professional: { name: 'Professional', credits: 200, price: '15.00', description: '200 credits - Professional Pack' },
-  enterprise: { name: 'Enterprise', credits: 500, price: '39.00', description: '500 credits - Enterprise Pack' },
-};
-
-// 订阅计划
-const SUBSCRIPTION_PLANS = {
-  monthly: { name: 'Pro Monthly', price: 10.00, interval: 'MONTH', description: 'Unlimited access - Monthly' },
-  yearly: { name: 'Pro Yearly', price: 69.00, interval: 'YEAR', description: 'Unlimited access - Yearly (Save 42%)' },
-};
-
-/**
- * 创建 PayPal 订单（积分包一次性支付）
- */
-async function createCreditOrder(packageId, userId, userEmail) {
-  const pkg = CREDIT_PACKAGES[packageId];
-  if (!pkg) throw new Error('Invalid package');
-
-  const accessToken = await getAccessToken();
-
-  const orderPayload = {
-    intent: 'CAPTURE',
-    application_context: {
-      return_url: 'https://image-background-remover.space/pricing?success=true&type=credits',
-      cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
-      brand_name: 'Image Background Remover',
-      locale: 'en-US',
-      landing_page: 'BILLING',
-      user_action: 'PAY_NOW',
-    },
-    purchase_units: [
-      {
-        reference_id: `credits_${packageId}_${userId}_${Date.now()}`,
-        description: pkg.description,
-        custom_id: JSON.stringify({ userId, packageId, type: 'credits' }),
-        amount: {
-          currency_code: 'USD',
-          value: pkg.price,
-        },
-      },
-    ],
-  };
-
-  const response = await fetch(`${PAYPAL_CONFIG.baseUrl}/v2/checkout/orders`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(orderPayload),
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to create order: ${error}`);
-  }
-
-  return await response.json();
-}
-
-/**
- * 创建 PayPal 订阅
- */
-async function createSubscription(planId, userId, userEmail) {
-  const plan = SUBSCRIPTION_PLANS[planId];
-  if (!plan) throw new Error('Invalid plan');
-  
-  console.log('Creating subscription for plan:', planId, 'price:', plan.price, 'interval:', plan.interval);
-
-  const accessToken = await getAccessToken();
-
-  // 首先创建产品
-  let productId;
-  
-  try {
-    const productResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/catalogs/products`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: `PRO-${planId.toUpperCase()}-V2-$${plan.price}-${Math.random()}`,
-        description: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
-        type: 'DIGITAL',
-        category: 'SOFTWARE',
-      }),
-    });
-
-    if (productResponse.ok) {
-      const product = await productResponse.json();
-      productId = product.id;
-    } else {
-      const err = await productResponse.text();
-      console.log('Product creation error:', err);
-      productId = 'PROD_' + Date.now(); // 使用随机ID
-    }
-  } catch (e) {
-    productId = 'PROD_' + Date.now();
-  }
-
-  // 创建定价计划
-  console.log("Creating subscription - plan:", planId, "price:", plan.price, "interval:", plan.interval);
-  const planPayload = {
-    product_id: productId,
-    name: `${plan.name}-P3-$${plan.price}-${Date.now()}`,
-    description: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
-    billing_cycles: [
-      {
-        frequency: {
-          interval_unit: plan.interval,
-          interval_count: 1,
-        },
-        tenure_type: 'REGULAR',
-        sequence: 1,
-        pricing_scheme: {
-          fixed_price: {
-            value: String(plan.price),
-            currency_code: 'USD',
-          },
-        },
-      },
-    ],
-    payment_preferences: {
-      auto_bill_outstanding: true,
-      setup_fee: {
-        value: '0',
-        currency_code: 'USD',
-      },
-      setup_fee_failure_action: 'CONTINUE',
-      payment_failure_threshold: 3,
-    },
-  };
-
-  const planResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/billing/plans`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(planPayload),
-  });
-
-  let billingPlanId;
-  if (planResponse.ok) {
-    const billingPlan = await planResponse.json();
-    billingPlanId = billingPlan.id;
-    console.log('Billing plan created:', billingPlanId);
-  } else {
-    // 如果创建失败，返回更详细的错误信息
-    const errorText = await planResponse.text();
-    console.error('PayPal plan creation failed:', errorText);
-    throw new Error(`Failed to create billing plan: ${errorText}`);
-  }
-
-  // 创建订阅
-  const subscriptionPayload = {
-    plan_id: billingPlanId,
-    custom_id: JSON.stringify({ userId, planId, type: 'subscription' }),
-    subscriber: {
-      email_address: userEmail,
-    },
-    application_context: {
-      brand_name: 'Image Background Remover',
-      locale: 'en-US',
-      return_url: 'https://image-background-remover.space/pricing?success=true&type=subscription&planId=' + planId,
-      cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
-      user_action: 'SUBSCRIBE_NOW',
-    },
-  };
-
-  const subResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/billing/subscriptions`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(subscriptionPayload),
-  });
-
-  if (!subResponse.ok) {
-    const error = await subResponse.text();
-    throw new Error(`Failed to create subscription: ${error}`);
-  }
-
-  const result = await subResponse.json();
-  console.log('Full subscription response:', JSON.stringify(result, null, 2));
-  
-  // Add a links array for frontend compatibility
-  if (!result.links && result.id) {
-    result.links = [{
-      rel: "approve",
-      href: "https://www.sandbox.paypal.com/webapps/billing/portal?token=" + result.id
-    }];
-  }
-  
-  return result;
-}
-
-/**
- * 创建 PayPal 订单或订阅
- * POST /api/payment/create-order
- */
 export async function onRequestPost(context) {
+  const { request } = context;
+  
   try {
-    const { env, request } = context;
-    
-    // 获取 session
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { type, planId, packageId } = body;
+
+    // Check session
     const cookies = request.headers.get('Cookie') || '';
-    console.log('Cookies received:', cookies);
     const sessionCookie = cookies.split('; ').find(c => c.startsWith('session='));
-    console.log('Session cookie found:', !!sessionCookie);
     
     if (!sessionCookie) {
       return new Response(JSON.stringify({ error: 'Please sign in first' }), {
@@ -282,53 +108,168 @@ export async function onRequestPost(context) {
 
     let session;
     try {
-      const sessionData = sessionCookie.split('=')[1];
-      session = JSON.parse(atob(sessionData));
-    } catch (e) {
+      session = JSON.parse(atob(sessionCookie.split('=')[1]));
+    } catch {
       return new Response(JSON.stringify({ error: 'Invalid session' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const body = await request.json();
-    const { type, packageId, planId } = body;
+    const userId = session.user?.id;
+    const userEmail = session.user?.email;
 
-    let result;
-
-    if (type === 'credits') {
-      if (!packageId || !CREDIT_PACKAGES[packageId]) {
-        return new Response(JSON.stringify({ error: 'Invalid package' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-      result = await createCreditOrder(packageId, session.user.id, session.user.email);
-      
-    } else if (type === 'subscription') { console.log('Request body:', JSON.stringify(body));
-      if (!planId || !SUBSCRIPTION_PLANS[planId]) {
-        return new Response(JSON.stringify({ error: 'Invalid plan' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-      result = await createSubscription(planId, session.user.id, session.user.email);
-      
-      // For subscriptions, return the subscription ID for activation
-      if (result.id) {
-        result.subscriptionId = result.id;
-      }
-      
-    } else {
-      return new Response(JSON.stringify({ error: 'Invalid type' }), {
-        status: 400,
+    if (!userId || !userEmail) {
+      return new Response(JSON.stringify({ error: 'Invalid session data' }), {
+        status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
+    // Handle credits purchase
+    if (type === 'credits' && packageId && CREDIT_PACKAGES[packageId]) {
+      const pkg = CREDIT_PACKAGES[packageId];
+      
+      const accessToken = await getAccessToken();
+      
+      // Create PayPal order for credits
+      const orderResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v2/checkout/orders`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          intent: 'CAPTURE',
+          purchase_units: [{
+            custom_id: JSON.stringify({ userId, packageId, type: 'credits' }),
+            amount: {
+              currency_code: 'USD',
+              value: String(pkg.price),
+            },
+          }],
+          application_context: {
+            return_url: 'https://image-background-remover.space/pricing?success=true&type=credits',
+            cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
+          },
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        const err = await orderResponse.text();
+        throw new Error(`PayPal error: ${err}`);
+      }
+
+      const order = await orderResponse.json();
+      const approvalUrl = order.links?.find(l => l.rel === 'approve')?.href;
+      
+      if (!approvalUrl) {
+        throw new Error('No approval URL found');
+      }
+
+      return new Response(JSON.stringify({ success: true, approvalUrl }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Handle subscription
+    if (type === 'subscription' && planId && SUBSCRIPTION_PLANS[planId]) {
+      const plan = SUBSCRIPTION_PLANS[planId];
+      
+      const accessToken = await getAccessToken();
+      
+      // Create product
+      const productResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/catalogs/products`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `Pro ${plan.name} ${Date.now()}`,
+          type: 'DIGITAL',
+        }),
+      });
+
+      if (!productResponse.ok) {
+        throw new Error('Failed to create product');
+      }
+
+      const product = await productResponse.json();
+
+      // Create billing plan
+      const planResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/billing/plans`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product_id: product.id,
+          name: `${plan.name} Plan`,
+          description: `${plan.name} subscription - $${plan.price}`,
+          billing_cycles: [{
+            frequency: { interval_unit: plan.interval, interval_count: 1 },
+            tenure_type: 'REGULAR',
+            sequence: 1,
+            pricing_scheme: {
+              fixed_price: { value: String(plan.price), currency_code: 'USD' },
+            },
+          }],
+          payment_preferences: {
+            auto_bill_outstanding: true,
+            setup_fee: { value: '0', currency_code: 'USD' },
+          },
+        }),
+      });
+
+      if (!planResponse.ok) {
+        const err = await planResponse.text();
+        throw new Error(`Failed to create billing plan: ${err}`);
+      }
+
+      const billingPlan = await planResponse.json();
+
+      // Create subscription
+      const subResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/billing/subscriptions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan_id: billingPlan.id,
+          custom_id: JSON.stringify({ userId, planId, type: 'subscription' }),
+          subscriber: { email_address: userEmail },
+          application_context: {
+            brand_name: 'Image Background Remover',
+            return_url: `https://image-background-remover.space/pricing?success=true&type=subscription&planId=${planId}`,
+            cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
+            user_action: 'SUBSCRIBE_NOW',
+          },
+        }),
+      });
+
+      if (!subResponse.ok) {
+        const err = await subResponse.text();
+        throw new Error(`Failed to create subscription: ${err}`);
+      }
+
+      const subscription = await subResponse.json();
+      const approveUrl = subscription.links?.find(l => l.rel === 'approve')?.href;
+
+      return new Response(JSON.stringify({ success: true, approvalUrl: approveUrl, subscriptionId: subscription.id }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({ error: 'Invalid request' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
   } catch (error) {
-    console.error("Create order error:", error);
+    console.error('Payment error:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
