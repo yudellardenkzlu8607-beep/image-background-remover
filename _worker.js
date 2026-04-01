@@ -28,7 +28,8 @@ export const onRequestGet = async (context) => {
   console.log(`[Pages API] GET ${cleanPath}`);
 
   try {
-    if ((cleanPath === 'api/auth/signin' || cleanPath.startsWith('api/auth/signin?'))) {
+    if ((cleanPath === 'api/auth/signin' || cleanPath.startsWith('api/auth/signin?')) ||
+        cleanPath.startsWith('api/auth/signin/google')) {
       return await handleAuthSignin(context);
     }
     
