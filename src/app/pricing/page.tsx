@@ -165,8 +165,8 @@ export default function Pricing() {
           : selectedItem.id;
       }
 
-      // Use create-order for both credits and subscriptions for now
-      const response = await fetch('/api/payment/create-order', {
+      const apiUrl = selectedItem.type === 'subscription' ? '/api/payment/create-subscription' : '/api/payment/create-order';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
