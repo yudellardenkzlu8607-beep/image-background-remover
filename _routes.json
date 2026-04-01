@@ -1,5 +1,0 @@
-{
-  "routes": [
-    { "pattern": "/api/*", "zone_name": "image-background-remover.space" }
-  ]
-}
