@@ -165,7 +165,8 @@ export default function Pricing() {
           : selectedItem.id;
       }
 
-      const response = await fetch(selectedItem.type === 'subscription' ? '/api/payment/create-subscription' : '/api/payment/create-order',
+      const apiUrl = selectedItem.type === 'subscription' ? '/api/payment/create-subscription' : '/api/payment/create-order';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
