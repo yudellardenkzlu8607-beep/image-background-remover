@@ -116,7 +116,7 @@ async function createSubscription(planId, userId, userEmail) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: `Pro ${planId} $${plan.price}`,
+        name: `PRO-${planId.toUpperCase()}-$${plan.price}-${Date.now()}`,
         description: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
         type: 'DIGITAL',
         category: 'SOFTWARE',
@@ -139,7 +139,7 @@ async function createSubscription(planId, userId, userEmail) {
   console.log("Creating subscription - plan:", planId, "price:", plan.price, "interval:", plan.interval);
   const planPayload = {
     product_id: productId,
-    name: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
+    name: `${plan.name}-P3-$${plan.price}-${Date.now()}`,
     description: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
     billing_cycles: [
       {
