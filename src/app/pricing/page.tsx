@@ -424,7 +424,14 @@ export default function Pricing() {
                 </div>
                 
                 <button
-                  onClick={() => handleGetStarted({ ...plan, type: 'subscription', id: billingCycle === 'yearly' ? 'yearly' : plan.id }, 'subscription')}
+                  onClick={() => {
+                    console.log('Subscribe clicked, billingCycle:', billingCycle);
+                    handleGetStarted({ 
+                      ...plan, 
+                      type: 'subscription', 
+                      id: billingCycle === 'yearly' ? 'yearly' : 'monthly' 
+                    }, 'subscription');
+                  }}
                   style={{
                     width: '100%', padding: '10px', borderRadius: '8px',
                     fontWeight: '500', fontSize: '14px',
