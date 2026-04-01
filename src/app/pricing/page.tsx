@@ -275,43 +275,6 @@ export default function Pricing() {
           <p style={{ fontSize: '16px', color: '#6b7280' }}>Credits never expire. Subscribe for unlimited usage.</p>
         </div>
 
-        {/* Two Big Buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '48px' }}>
-          <a 
-            href="#credits-anchor" 
-            onClick={(e) => { e.preventDefault(); creditsRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
-            style={{
-              borderRadius: '12px', padding: '24px',
-              border: activeSection === 'credits' ? '2px solid #2563eb' : '2px solid #e5e7eb', 
-              backgroundColor: activeSection === 'credits' ? '#eff6ff' : 'white',
-              textAlign: 'center', textDecoration: 'none',
-              transition: 'all 0.2s',
-              boxShadow: activeSection === 'credits' ? '0 0 0 3px rgba(37, 99, 235, 0.2)' : 'none'
-            }}
-          >
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>💳</div>
-            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Buy Credits</h3>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>One-time purchase. Credits never expire.</p>
-          </a>
-          
-          <a 
-            href="#subscription-anchor"
-            onClick={(e) => { e.preventDefault(); subscriptionRef.current?.scrollIntoView({ behavior: 'smooth' }); }}
-            style={{
-              borderRadius: '12px', padding: '24px',
-              border: activeSection === 'subscription' ? '2px solid #2563eb' : '2px solid #e5e7eb',
-              backgroundColor: activeSection === 'subscription' ? '#eff6ff' : 'white',
-              textAlign: 'center', textDecoration: 'none',
-              transition: 'all 0.2s',
-              boxShadow: activeSection === 'subscription' ? '0 0 0 3px rgba(37, 99, 235, 0.2)' : 'none'
-            }}
-          >
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📋</div>
-            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>Subscribe</h3>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Unlimited usage. Cancel anytime.</p>
-          </a>
-        </div>
-
         {/* Credits Section */}
         <div ref={creditsRef} id="credits-anchor" style={{ marginBottom: '48px', paddingTop: '20px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Buy Credits</h2>
