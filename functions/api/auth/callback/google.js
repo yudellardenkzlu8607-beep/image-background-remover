@@ -120,7 +120,7 @@ export async function onRequestGet(context) {
     status: 302,
     headers: {
       Location: '/',
-      'Set-Cookie': `session=${btoa(JSON.stringify(session))}; HttpOnly; Path=/; SameSite=Lax; Expires=${new Date(session.expires).toUTCString()}`,
+      'Set-Cookie': `session=${btoa(JSON.stringify(session))}; HttpOnly; Path=/; SameSite=Lax; Secure; Expires=${new Date(session.expires).toUTCString()}`,
     },
   });
 }
