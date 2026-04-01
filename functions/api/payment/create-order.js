@@ -136,7 +136,7 @@ async function createSubscription(planId, userId, userEmail) {
   }
 
   // 创建定价计划
-  console.log("Plan payload - price:", plan.price, "type:", typeof plan.price, "interval:", plan.interval);
+  console.log("Creating subscription - plan:", planId, "price:", plan.price, "interval:", plan.interval);
   const planPayload = {
     product_id: productId,
     name: plan.name + ' ' + Date.now(),
@@ -151,7 +151,7 @@ async function createSubscription(planId, userId, userEmail) {
         sequence: 1,
         pricing_scheme: {
           fixed_price: {
-            value: plan.price,
+            value: String(plan.price),
             currency_code: 'USD',
           },
         },
