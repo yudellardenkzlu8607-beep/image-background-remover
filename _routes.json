@@ -1,5 +1,5 @@
 {
   "routes": [
-    { "pattern": "/api/*", "worker": "_worker" }
+    { "pattern": "/api/*" }
   ]
 }
