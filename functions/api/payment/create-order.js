@@ -116,8 +116,8 @@ async function createSubscription(planId, userId, userEmail) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: 'Image Background Remover Pro',
-        description: 'Unlimited access to AI background removal',
+        name: `Pro ${planId} $${plan.price}`,
+        description: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
         type: 'DIGITAL',
         category: 'SOFTWARE',
       }),
@@ -139,8 +139,8 @@ async function createSubscription(planId, userId, userEmail) {
   console.log("Creating subscription - plan:", planId, "price:", plan.price, "interval:", plan.interval);
   const planPayload = {
     product_id: productId,
-    name: plan.name + ' ' + Date.now(),
-    description: plan.description,
+    name: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
+    description: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
     billing_cycles: [
       {
         frequency: {
