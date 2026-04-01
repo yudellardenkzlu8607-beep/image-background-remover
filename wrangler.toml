@@ -1,6 +1,7 @@
 name = "image-background-remover"
 compatibility_date = "2026-03-21"
 compatibility_flags = ["nodejs_compat_populate_process_env"]
+pages_build_output_dir = ".output"
 
 [vars]
 NEXTAUTH_URL = "https://image-background-remover.space"

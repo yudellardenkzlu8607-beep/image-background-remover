@@ -49,13 +49,14 @@ export async function onRequestPost(context) {
   const plan = SUBSCRIPTION_PLANS[planId];
   const accessToken = await getAccessToken();
 
-  // 创建产品
+  // 创建产品 - 使用随机后缀避免 PayPal 复用
+  const productName = `IBR-Pro-${planId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   const productResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/catalogs/products`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      name: `Image Background Remover ${planId} ${Date.now()}`,
-      description: `Pro subscription - ${planId}`,
+      name: productName,
+      description: `Pro subscription - ${planId} - $${plan.price}`,
       type: 'DIGITAL',
       category: 'SOFTWARE',
     }),
@@ -69,14 +70,14 @@ export async function onRequestPost(context) {
   const productId = product.id;
   console.log('Created product:', productId);
 
-  // 创建定价计划
+  console.log('Creating billing plan with price:', plan.price, 'interval:', plan.interval, 'planId:', planId);
   const planResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v1/billing/plans`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       product_id: productId,
-      name: `Pro ${planId} ${Date.now()}`,
-      description: `${plan.name} subscription`,
+      name: `Pro-${planId}-$${plan.price}-${Date.now()}`,
+      description: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
       billing_cycles: [{
         frequency: { interval_unit: plan.interval, interval_count: 1 },
         tenure_type: 'REGULAR',
