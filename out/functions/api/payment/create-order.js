@@ -116,7 +116,7 @@ async function createSubscription(planId, userId, userEmail) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: `PRO-${planId.toUpperCase()}-$${plan.price}-${Date.now()}`,
+        name: `PRO-${planId.toUpperCase()}-V2-$${plan.price}-${Math.random()}`,
         description: `${plan.name} - $${plan.price}/${plan.interval === 'YEAR' ? 'year' : 'month'}`,
         type: 'DIGITAL',
         category: 'SOFTWARE',
