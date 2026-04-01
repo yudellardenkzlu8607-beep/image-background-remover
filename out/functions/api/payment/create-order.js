@@ -181,9 +181,11 @@ async function createSubscription(planId, userId, userEmail) {
   if (planResponse.ok) {
     const billingPlan = await planResponse.json();
     billingPlanId = billingPlan.id;
+    console.log('Billing plan created:', billingPlanId);
   } else {
-    // 如果创建失败，返回错误信息
+    // 如果创建失败，返回更详细的错误信息
     const errorText = await planResponse.text();
+    console.error('PayPal plan creation failed:', errorText);
     throw new Error(`Failed to create billing plan: ${errorText}`);
   }
 
