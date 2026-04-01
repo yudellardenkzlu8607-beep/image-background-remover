@@ -217,7 +217,7 @@ async function createSubscription(planId, userId, userEmail) {
     throw new Error(`Failed to create subscription: ${error}`);
   }
 
-  return await subResponse.json();
+  const result = await subResponse.json(); console.log('Subscription created:', JSON.stringify(result)); return result;
 }
 
 /**
@@ -263,7 +263,7 @@ export async function onRequestPost(context) {
       }
       result = await createCreditOrder(packageId, session.user.id, session.user.email);
       
-    } else if (type === 'subscription') {
+    } else if (type === 'subscription') { console.log('Request body:', JSON.stringify(body));
       if (!planId || !SUBSCRIPTION_PLANS[planId]) {
         return new Response(JSON.stringify({ error: 'Invalid plan' }), {
           status: 400,
