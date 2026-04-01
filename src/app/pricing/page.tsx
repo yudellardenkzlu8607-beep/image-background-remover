@@ -174,20 +174,33 @@ export default function Pricing() {
 
       const data = await response.json();
 
+      console.log('Payment response:', data); // Debug log
+
       if (data.error) {
         alert(data.error);
         return;
       }
 
+      // For subscription: check for approve link
       if (data.links) {
         const approvalUrl = data.links.find((link: any) => link.rel === 'approve' || link.rel === 'payer-action');
         if (approvalUrl) {
           window.location.href = approvalUrl.href;
+        } else {
+          // No approve link found, show error
+          console.error('No approve link found in response:', data);
+          alert('Payment setup failed: No payment link found. Response: ' + JSON.stringify(data));
         }
+      } else if (data.id) {
+        // Subscription created but no links - might be pending
+        console.log('Subscription created, ID:', data.id);
+        alert('Subscription created! ID: ' + data.id + '. Please check your email for payment link.');
+      } else {
+        alert('Payment initialization failed. Please try again. Response: ' + JSON.stringify(data));
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Payment initialization failed. Please try again.');
+      alert('Payment initialization failed. Please try again. Error: ' + error);
     }
   };
 
