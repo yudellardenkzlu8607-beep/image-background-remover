@@ -243,7 +243,9 @@ export async function onRequestPost(context) {
     
     // 获取 session
     const cookies = request.headers.get('Cookie') || '';
+    console.log('Cookies received:', cookies);
     const sessionCookie = cookies.split('; ').find(c => c.startsWith('session='));
+    console.log('Session cookie found:', !!sessionCookie);
     
     if (!sessionCookie) {
       return new Response(JSON.stringify({ error: 'Please sign in first' }), {
