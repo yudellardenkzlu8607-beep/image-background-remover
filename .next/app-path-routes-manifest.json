@@ -5,7 +5,7 @@
   "/auth/signin/page": "/auth/signin",
   "/faq/page": "/faq",
   "/page": "/",
+  "/subscription/page": "/subscription",
   "/pricing/page": "/pricing",
-  "/profile/page": "/profile",
-  "/subscription/page": "/subscription"
+  "/profile/page": "/profile"
 }
