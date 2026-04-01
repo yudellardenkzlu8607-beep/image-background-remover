@@ -256,7 +256,17 @@ export async function onRequestPost(context) {
 
     let session;
     try {
-      session = JSON.parse(atob(sessionCookie.split('=')[1]));
+      const sessionData = sessionCookie.split('=')[1];
+      // Use Buffer for decoding if available, fallback to atob
+      try {
+        session = JSON.parse(decodeURIComponent(escape(atob(sessionData))));
+      } catch (decodeErr) {
+        console.error('Session decode error:', decodeErr);
+        return new Response(JSON.stringify({ error: 'Invalid session format' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
     } catch (e) {
       return new Response(JSON.stringify({ error: 'Invalid session' }), {
         status: 401,
