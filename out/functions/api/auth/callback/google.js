@@ -1,3 +1,29 @@
+// Base64 encode/decode polyfill for Cloudflare Workers
+function atobPolyfill(str) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  str = str.replace(/=+$/, '');
+  for (let bc = 0, bs = 0, buffer, i = 0; (buffer = str.charAt(i++)); ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
+    if (buffer.charCodeAt(0) === 61) break;
+  }
+  return output;
+}
+
+function btoaPolyfill(str) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  for (let i = 0; i < str.length; i += 3) {
+    const a = str.charCodeAt(i);
+    const b = i + 1 < str.length ? str.charCodeAt(i + 1) : 0;
+    const c = i + 2 < str.length ? str.charCodeAt(i + 2) : 0;
+    output += chars[a >> 2] + chars[((a & 3) << 4) | (b >> 4)] + (i + 1 < str.length ? chars[((b & 15) << 2) | (c >> 6)] : '=') + (i + 2 < str.length ? chars[c & 63] : '=');
+  }
+  return output;
+}
+
+globalThis.atob = globalThis.atob || atobPolyfill;
+globalThis.btoa = globalThis.btoa || btoaPolyfill;
+
 export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
