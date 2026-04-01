@@ -219,16 +219,18 @@ async function createSubscription(planId, userId, userEmail) {
     throw new Error(`Failed to create subscription: ${error}`);
   }
 
-  const result = await subResponse.json(); // Debug: log and return structured data
-console.log('Full subscription response:', JSON.stringify(result, null, 2));
-// Add a links array for frontend compatibility
-if (!result.links && result.id) {
-  result.links = [{
-    rel: "approve",
-    href: result.links?.[0]?.href || result.links?.[0]?.approve_url || "https://www.sandbox.paypal.com/webapps/billing/portal?token=" + result.id
-  }];
-}
-return result;
+  const result = await subResponse.json();
+  console.log('Full subscription response:', JSON.stringify(result, null, 2));
+  
+  // Add a links array for frontend compatibility
+  if (!result.links && result.id) {
+    result.links = [{
+      rel: "approve",
+      href: "https://www.sandbox.paypal.com/webapps/billing/portal?token=" + result.id
+    }];
+  }
+  
+  return result;
 }
 
 /**
