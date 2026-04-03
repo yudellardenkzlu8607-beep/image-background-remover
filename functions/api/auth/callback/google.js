@@ -74,11 +74,40 @@ export async function onRequestGet(context) {
     }
 
     const googleUser = await userInfoResponse.json();
+    const userId = `google_${googleUser.id}`;
 
-    // 3. 创建 Session（简单版本，暂时不碰数据库）
+    // 3. 尝试数据库操作（失败不阻塞登录）
+    try {
+      if (env.DB) {
+        // 创建或更新用户
+        await env.DB.prepare(`
+          INSERT OR REPLACE INTO users (id, email, name, image, provider, provider_account_id, last_login)
+          VALUES (?, ?, ?, ?, 'google', ?, CURRENT_TIMESTAMP)
+        `).bind(userId, googleUser.email, googleUser.name, googleUser.picture, googleUser.id).run();
+
+        // 初始化积分
+        const existingCredits = await env.DB.prepare('SELECT balance FROM user_credits WHERE user_id = ?').bind(userId).first();
+        if (!existingCredits) {
+          await env.DB.prepare(`
+            INSERT OR IGNORE INTO user_credits (user_id, balance, total_purchased, total_used, bonus_received)
+            VALUES (?, 3, 0, 0, 3)
+          `).bind(userId).run();
+        }
+
+        // 记录登录日志
+        await env.DB.prepare(`
+          INSERT INTO login_logs (user_id, email, login_time)
+          VALUES (?, ?, CURRENT_TIMESTAMP)
+        `).bind(userId, googleUser.email).run();
+      }
+    } catch (dbErr) {
+      console.error('Database error (non-blocking):', dbErr);
+    }
+
+    // 4. 创建 Session
     const session = {
       user: {
-        id: `google_${googleUser.id}`,
+        id: userId,
         name: googleUser.name,
         email: googleUser.email,
         image: googleUser.picture,
@@ -86,14 +115,12 @@ export async function onRequestGet(context) {
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     };
 
-    const sessionString = btoa(JSON.stringify(session));
-
-    // 4. 重定向到首页，设置 cookie
+    // 5. 重定向到首页
     return new Response(null, {
       status: 302,
       headers: {
         Location: '/',
-        'Set-Cookie': `session=${sessionString}; Path=/; SameSite=Lax; Expires=${new Date(session.expires).toUTCString()}`,
+        'Set-Cookie': `session=${btoa(JSON.stringify(session))}; Path=/; SameSite=Lax; Expires=${new Date(session.expires).toUTCString()}`,
       },
     });
   } catch (err) {

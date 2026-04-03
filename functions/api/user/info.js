@@ -11,12 +11,14 @@ function atobPolyfill(str) {
 globalThis.atob = globalThis.atob || atobPolyfill;
 
 /**
- * 获取用户信息（简化版，不依赖数据库）
+ * 获取用户积分和订阅信息
  * GET /api/user/info
  */
 
 export async function onRequestGet(context) {
   try {
+    const { env } = context;
+    
     // 从 Cookie 获取 session
     const cookies = context.request.headers.get('Cookie') || '';
     const sessionCookie = cookies.split('; ').find(c => c.startsWith('session='));
@@ -39,14 +41,56 @@ export async function onRequestGet(context) {
       });
     }
     
-    if (!session.user) {
+    const userId = session.user?.id;
+    
+    if (!userId) {
       return new Response(JSON.stringify({ error: 'User not found in session' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       });
     }
     
-    // 简化版返回，不依赖数据库
+    // 默认值
+    let credits = { balance: 3, total_used: 0, total_purchased: 0, bonus_received: 3 };
+    let subscription = null;
+    let dailyUsageCount = 0;
+    
+    // 尝试从数据库读取
+    try {
+      if (env.DB) {
+        // 积分信息
+        const creditsResult = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
+        if (creditsResult) {
+          credits = creditsResult;
+        }
+        
+        // 订阅信息
+        try {
+          subscription = await env.DB.prepare(`
+            SELECT * FROM subscriptions 
+            WHERE user_id = ?
+            ORDER BY created_at DESC LIMIT 1
+          `).bind(userId).first();
+        } catch (e) {
+          console.log('Subscription query error:', e.message);
+        }
+        
+        // 今日使用次数
+        const today = new Date().toISOString().split('T')[0];
+        const dailyUsageResult = await env.DB.prepare(`
+          SELECT count FROM daily_usage 
+          WHERE user_id = ? AND usage_date = ?
+        `).bind(userId, today).first();
+        
+        if (dailyUsageResult) {
+          dailyUsageCount = dailyUsageResult.count;
+        }
+      }
+    } catch (dbErr) {
+      console.error('Database error:', dbErr);
+      // 数据库错误时使用默认值
+    }
+    
     return new Response(JSON.stringify({
       user: {
         id: session.user.id,
@@ -55,13 +99,18 @@ export async function onRequestGet(context) {
         image: session.user.image
       },
       credits: {
-        balance: 10,
-        totalUsed: 0,
-        totalPurchased: 0,
-        bonusReceived: 10
+        balance: credits.balance || 0,
+        totalUsed: credits.total_used || 0,
+        totalPurchased: credits.total_purchased || 0,
+        bonusReceived: credits.bonus_received || 0
       },
-      subscription: null,
-      dailyUsage: 0,
+      subscription: subscription ? {
+        plan: subscription.plan,
+        status: subscription.status,
+        creditsGranted: subscription.creditsGranted || subscription.credits_granted || 0,
+        currentPeriodEnd: subscription.currentPeriodEnd || subscription.current_period_end
+      } : null,
+      dailyUsage: dailyUsageCount,
       pricing: {
         starter: { name: '入门版', price: 9, credits: 50 },
         pro: { name: '专业版', price: 39, credits: 400 },
