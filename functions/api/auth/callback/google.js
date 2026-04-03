@@ -30,11 +30,11 @@ export async function onRequestGet(context) {
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
 
-  const cookieHeader = request.headers.get('Cookie');
-  const storedState = cookieHeader?.split('; ').find(c => c.startsWith('oauth_state='))?.split('=')[1];
+  const cookieHeader = request.headers.get('Cookie') || '';
+  const storedState = cookieHeader.split('; ').find(c => c.startsWith('oauth_state='))?.split('=')[1];
 
   if (!code || !state || state !== storedState) {
-    return new Response('Invalid request', { status: 400 });
+    return new Response('Invalid request - code or state missing', { status: 400 });
   }
 
   const GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID || '';
@@ -57,8 +57,7 @@ export async function onRequestGet(context) {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('Token exchange failed:', errorText);
-      return new Response('Failed to get token: ' + errorText, { status: 500 });
+      return new Response('Token exchange failed: ' + errorText, { status: 500 });
     }
 
     const tokens = await tokenResponse.json();
@@ -71,62 +70,30 @@ export async function onRequestGet(context) {
 
     if (!userInfoResponse.ok) {
       const errorText = await userInfoResponse.text();
-      console.error('Failed to get user info:', errorText);
       return new Response('Failed to get user info: ' + errorText, { status: 500 });
     }
 
     const googleUser = await userInfoResponse.json();
 
-    // 3. 生成唯一用户 ID
-    const userId = `google_${googleUser.id}`;
-
-    // 4. 尝试数据库操作（如果失败也继续，不阻塞登录）
-    try {
-      if (env.DB) {
-        // 创建或更新用户记录
-        await env.DB.prepare(`
-          INSERT OR REPLACE INTO users (id, email, name, image, provider, provider_account_id, last_login)
-          VALUES (?, ?, ?, ?, 'google', ?, CURRENT_TIMESTAMP)
-        `).bind(userId, googleUser.email, googleUser.name, googleUser.picture, googleUser.id).run();
-
-        // 初始化积分
-        const existingCredits = await env.DB.prepare('SELECT balance FROM user_credits WHERE user_id = ?').bind(userId).first();
-        
-        if (!existingCredits) {
-          await env.DB.prepare(`
-            INSERT OR IGNORE INTO user_credits (user_id, balance, total_purchased, total_used, bonus_received)
-            VALUES (?, 0, 0, 0, 0)
-          `).bind(userId).run();
-        }
-
-        // 记录登录日志
-        await env.DB.prepare(`
-          INSERT INTO login_logs (user_id, email, login_time)
-          VALUES (?, ?, CURRENT_TIMESTAMP)
-        `).bind(userId, googleUser.email).run();
-      }
-    } catch (dbErr) {
-      console.error('Database error (non-blocking):', dbErr);
-      // 数据库操作失败不阻塞登录
-    }
-
-    // 5. 创建 Session
+    // 3. 创建 Session（简单版本，暂时不碰数据库）
     const session = {
       user: {
-        id: userId,
+        id: `google_${googleUser.id}`,
         name: googleUser.name,
         email: googleUser.email,
         image: googleUser.picture,
       },
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7天过期
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     };
 
-    // 6. 重定向到首页
+    const sessionString = btoa(JSON.stringify(session));
+
+    // 4. 重定向到首页，设置 cookie
     return new Response(null, {
       status: 302,
       headers: {
         Location: '/',
-        'Set-Cookie': `session=${btoa(JSON.stringify(session))}; HttpOnly; Path=/; SameSite=Lax; Expires=${new Date(session.expires).toUTCString()}`,
+        'Set-Cookie': `session=${sessionString}; Path=/; SameSite=Lax; Expires=${new Date(session.expires).toUTCString()}`,
       },
     });
   } catch (err) {
