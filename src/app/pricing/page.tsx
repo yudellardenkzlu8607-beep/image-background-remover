@@ -74,16 +74,32 @@ export default function Pricing() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success') === 'true') {
       const type = params.get('type') || 'credits';
-      const token = params.get('token');
+      let token = params.get('token');
       const planId = params.get('planId') || 'monthly';
+      
+      // 如果是订阅但没有 token，从 localStorage 读取
+      if (type === 'subscription' && !token) {
+        token = localStorage.getItem('pendingSubscriptionId');
+        const storedPlanId = localStorage.getItem('pendingSubscriptionPlanId');
+        if (storedPlanId && !planId) {
+          // 使用存储的 planId
+        }
+        console.log('Retrieved subscription ID from localStorage:', token);
+      }
       
       if (token) {
         capturePayment(token, type, planId);
+        // 清除 localStorage
+        localStorage.removeItem('pendingSubscriptionId');
+        localStorage.removeItem('pendingSubscriptionPlanId');
       }
       setSuccessMessage(type === 'credits' ? 'Payment successful! Credits have been applied to your account.' : 'Subscription activated successfully!');
     }
     if (params.get('canceled') === 'true') {
       setCanceledMessage('Payment was canceled. Please try again.');
+      // 清除 localStorage
+      localStorage.removeItem('pendingSubscriptionId');
+      localStorage.removeItem('pendingSubscriptionPlanId');
     }
   }, []);
 
@@ -217,6 +233,12 @@ export default function Pricing() {
       }
 
       if (redirectUrl) {
+        // 如果是订阅，先保存 subscriptionId 到 localStorage
+        if (selectedItem.type === 'subscription' && data.subscriptionId) {
+          localStorage.setItem('pendingSubscriptionId', data.subscriptionId);
+          localStorage.setItem('pendingSubscriptionPlanId', selectedItem.id);
+          console.log('Saved subscription ID to localStorage:', data.subscriptionId);
+        }
         window.location.href = redirectUrl;
       } else if (data.id) {
         // Subscription created but no links - might be pending

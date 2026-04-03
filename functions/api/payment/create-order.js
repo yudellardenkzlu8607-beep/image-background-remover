@@ -267,13 +267,16 @@ export async function onRequestPost(context) {
       const subscription = await subResponse.json();
       const approveUrl = subscription.links?.find(l => l.rel === 'approve')?.href;
 
+      console.log('PayPal subscription created:', subscription);
+
       // 返回兼容格式
       return new Response(JSON.stringify({ 
         success: true, 
         approvalUrl: approveUrl, 
         subscriptionId: subscription.id,
         id: subscription.id,
-        links: subscription.links
+        links: subscription.links,
+        subscription: subscription
       }), {
         headers: { 'Content-Type': 'application/json' }
       });
