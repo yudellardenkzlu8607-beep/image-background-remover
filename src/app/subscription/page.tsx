@@ -8,6 +8,11 @@ export default function Subscription() {
   const [credits, setCredits] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refreshData = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   useEffect(() => {
     fetch('/api/auth/session')
@@ -27,7 +32,7 @@ export default function Subscription() {
         }
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   const handleCancel = () => {
     if (confirm('Are you sure you want to cancel your subscription?')) {
@@ -68,6 +73,21 @@ export default function Subscription() {
             <Link href="/" style={{ color: '#6b7280', textDecoration: 'none', fontSize: '14px' }}>← Back</Link>
             <h1 style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>My Account</h1>
           </div>
+          <button
+            onClick={refreshData}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#f3f4f6',
+              color: '#374151',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            🔄 Refresh
+          </button>
         </div>
       </header>
 
