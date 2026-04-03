@@ -52,7 +52,7 @@ const SUBSCRIPTION_PLANS = {
   yearly: { name: 'Yearly', price: 69, interval: 'YEAR' },
 };
 
-// Credit packages
+// Credit packages - 确保和前端一致！
 const CREDIT_PACKAGES = {
   starter: { name: 'Starter', price: 5, credits: 50 },
   professional: { name: 'Professional', price: 15, credits: 200, popular: true },
@@ -143,14 +143,17 @@ export async function onRequestPost(context) {
           intent: 'CAPTURE',
           purchase_units: [{
             custom_id: JSON.stringify({ userId, packageId, type: 'credits' }),
+            description: `${pkg.name} - ${pkg.credits} credits`,
             amount: {
               currency_code: 'USD',
               value: String(pkg.price),
             },
           }],
           application_context: {
+            brand_name: 'Image Background Remover',
             return_url: 'https://image-background-remover.space/pricing?success=true&type=credits',
             cancel_url: 'https://image-background-remover.space/pricing?canceled=true',
+            user_action: 'PAY_NOW',
           },
         }),
       });

@@ -3,6 +3,19 @@
  * POST /api/payment/capture-order
  */
 
+// Base64 decode polyfill
+function atobPolyfill(str) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  str = str.replace(/=+$/, '');
+  for (let bc = 0, bs = 0, buffer, i = 0; (buffer = str.charAt(i++)); ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
+    if (buffer.charCodeAt(0) === 61) break;
+  }
+  return output;
+}
+globalThis.atob = globalThis.atob || atobPolyfill;
+
+// Credit packages - 确保和 create-order.js 以及前端完全一致！
 const CREDIT_PACKAGES = {
   starter: { name: 'Starter', credits: 50, price: '5.00' },
   professional: { name: 'Professional', credits: 200, price: '15.00' },
