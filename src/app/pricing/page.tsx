@@ -371,57 +371,91 @@ export default function Pricing() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-            {subscriptionPlans.map((plan) => (
-              <div key={plan.id} style={{
-                borderRadius: '12px', padding: '24px',
-                border: plan.id === 'yearly' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                backgroundColor: plan.id === 'yearly' ? '#eff6ff' : 'white',
-                position: 'relative'
-              }}>
-                {plan.saving && (
-                  <div style={{
-                    position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
-                    backgroundColor: '#16a34a', color: 'white', padding: '2px 12px',
-                    borderRadius: '9999px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap'
-                  }}>
-                    {plan.saving}
-                  </div>
-                )}
-                
-                <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>{plan.name}</h3>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
-                    <span style={{ fontSize: '32px', fontWeight: '600', color: '#111827' }}>
-                      {billingCycle === 'yearly' && plan.id === 'monthly' ? '$69' : `$${plan.price}`}
-                    </span>
-                    <span style={{ fontSize: '14px', color: '#6b7280' }}>
-                      {billingCycle === 'yearly' && plan.id === 'monthly' ? '/year' : `/${plan.period}`}
-                    </span>
-                  </div>
+            {/* Monthly Plan */}
+            <div style={{
+              borderRadius: '12px', padding: '24px',
+              border: billingCycle === 'monthly' ? '2px solid #2563eb' : '1px solid #e5e7eb',
+              backgroundColor: billingCycle === 'monthly' ? '#eff6ff' : 'white',
+              position: 'relative'
+            }}>
+              <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>Monthly</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '32px', fontWeight: '600', color: '#111827' }}>$10</span>
+                  <span style={{ fontSize: '14px', color: '#6b7280' }}>/month</span>
                 </div>
-                
-                <button
-                  onClick={() => {
-                    console.log('Subscribe clicked, billingCycle:', billingCycle);
-                    handleGetStarted({ 
-                      ...plan, 
-                      type: 'subscription', 
-                      id: billingCycle === 'yearly' ? 'yearly' : 'monthly' 
-                    }, 'subscription');
-                  }}
-                  style={{
-                    width: '100%', padding: '10px', borderRadius: '8px',
-                    fontWeight: '500', fontSize: '14px',
-                    backgroundColor: plan.id === 'yearly' ? '#2563eb' : '#f9fafb',
-                    color: plan.id === 'yearly' ? 'white' : '#374151',
-                    border: plan.id === 'yearly' ? 'none' : '1px solid #d1d5db',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Subscribe
-                </button>
               </div>
-            ))}
+              
+              <button
+                onClick={() => {
+                  console.log('Subscribe Monthly clicked');
+                  handleGetStarted({ 
+                    id: 'monthly', 
+                    name: 'Monthly', 
+                    price: 10, 
+                    period: 'month',
+                    type: 'subscription'
+                  }, 'subscription');
+                }}
+                style={{
+                  width: '100%', padding: '10px', borderRadius: '8px',
+                  fontWeight: '500', fontSize: '14px',
+                  backgroundColor: billingCycle === 'monthly' ? '#2563eb' : '#f9fafb',
+                  color: billingCycle === 'monthly' ? 'white' : '#374151',
+                  border: billingCycle === 'monthly' ? 'none' : '1px solid #d1d5db',
+                  cursor: 'pointer'
+                }}
+              >
+                Subscribe
+              </button>
+            </div>
+
+            {/* Yearly Plan */}
+            <div style={{
+              borderRadius: '12px', padding: '24px',
+              border: billingCycle === 'yearly' ? '2px solid #2563eb' : '1px solid #e5e7eb',
+              backgroundColor: billingCycle === 'yearly' ? '#eff6ff' : 'white',
+              position: 'relative'
+            }}>
+              <div style={{
+                position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
+                backgroundColor: '#16a34a', color: 'white', padding: '2px 12px',
+                borderRadius: '9999px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap'
+              }}>
+                Save $51
+              </div>
+              
+              <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>Yearly</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '32px', fontWeight: '600', color: '#111827' }}>$69</span>
+                  <span style={{ fontSize: '14px', color: '#6b7280' }}>/year</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => {
+                  console.log('Subscribe Yearly clicked');
+                  handleGetStarted({ 
+                    id: 'yearly', 
+                    name: 'Yearly', 
+                    price: 69, 
+                    period: 'year',
+                    type: 'subscription'
+                  }, 'subscription');
+                }}
+                style={{
+                  width: '100%', padding: '10px', borderRadius: '8px',
+                  fontWeight: '500', fontSize: '14px',
+                  backgroundColor: billingCycle === 'yearly' ? '#2563eb' : '#f9fafb',
+                  color: billingCycle === 'yearly' ? 'white' : '#374151',
+                  border: billingCycle === 'yearly' ? 'none' : '1px solid #d1d5db',
+                  cursor: 'pointer'
+                }}
+              >
+                Subscribe
+              </button>
+            </div>
           </div>
         </div>
       </div>
