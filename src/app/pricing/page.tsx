@@ -194,16 +194,18 @@ export default function Pricing() {
         return;
       }
 
-      // For subscription: check for approve link
-      if (data.links) {
-        const approvalUrl = data.links.find((link: any) => link.rel === 'approve' || link.rel === 'payer-action');
-        if (approvalUrl) {
-          window.location.href = approvalUrl.href;
-        } else {
-          // No approve link found, show error
-          console.error('No approve link found in response:', data);
-          alert('Payment setup failed: No payment link found. Response: ' + JSON.stringify(data));
+      // 优先使用 approvalUrl，如果没有则从 links 中找
+      let redirectUrl = data.approvalUrl;
+      
+      if (!redirectUrl && data.links) {
+        const approvalLink = data.links.find((link: any) => link.rel === 'approve' || link.rel === 'payer-action');
+        if (approvalLink) {
+          redirectUrl = approvalLink.href;
         }
+      }
+
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
       } else if (data.id) {
         // Subscription created but no links - might be pending
         console.log('Subscription created, ID:', data.id);

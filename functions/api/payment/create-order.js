@@ -167,7 +167,13 @@ export async function onRequestPost(context) {
         throw new Error('No approval URL found');
       }
 
-      return new Response(JSON.stringify({ success: true, approvalUrl }), {
+      // 返回兼容格式：既有 approvalUrl 也有 links，方便前端使用
+      return new Response(JSON.stringify({ 
+        success: true, 
+        approvalUrl,
+        id: order.id,
+        links: order.links
+      }), {
         headers: { 'Content-Type': 'application/json' }
       });
     }
@@ -258,7 +264,14 @@ export async function onRequestPost(context) {
       const subscription = await subResponse.json();
       const approveUrl = subscription.links?.find(l => l.rel === 'approve')?.href;
 
-      return new Response(JSON.stringify({ success: true, approvalUrl: approveUrl, subscriptionId: subscription.id }), {
+      // 返回兼容格式
+      return new Response(JSON.stringify({ 
+        success: true, 
+        approvalUrl: approveUrl, 
+        subscriptionId: subscription.id,
+        id: subscription.id,
+        links: subscription.links
+      }), {
         headers: { 'Content-Type': 'application/json' }
       });
     }
