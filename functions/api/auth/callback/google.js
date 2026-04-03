@@ -85,11 +85,11 @@ export async function onRequestGet(context) {
           VALUES (?, ?, ?, ?, 'google', ?, CURRENT_TIMESTAMP)
         `).bind(userId, googleUser.email, googleUser.name, googleUser.picture, googleUser.id).run();
 
-        // 初始化积分
-        const existingCredits = await env.DB.prepare('SELECT balance FROM user_credits WHERE user_id = ?').bind(userId).first();
-        if (!existingCredits) {
+        // 初始化积分（如果用户没有积分或者积分为0，赠送3积分）
+        const existingCredits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
+        if (!existingCredits || existingCredits.balance === 0) {
           await env.DB.prepare(`
-            INSERT OR IGNORE INTO user_credits (user_id, balance, total_purchased, total_used, bonus_received)
+            INSERT OR REPLACE INTO user_credits (user_id, balance, total_purchased, total_used, bonus_received)
             VALUES (?, 3, 0, 0, 3)
           `).bind(userId).run();
         }
