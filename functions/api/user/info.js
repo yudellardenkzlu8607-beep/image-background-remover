@@ -1,3 +1,15 @@
+// Base64 decode polyfill for Cloudflare Workers
+function atobPolyfill(str) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  str = str.replace(/=+$/, '');
+  for (let bc = 0, bs = 0, buffer, i = 0; (buffer = str.charAt(i++)); ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0) {
+    if (buffer.charCodeAt(0) === 61) break;
+  }
+  return output;
+}
+globalThis.atob = globalThis.atob || atobPolyfill;
+
 /**
  * 获取用户积分和订阅信息
  * GET /api/user/info
@@ -22,6 +34,7 @@ export async function onRequestGet(context) {
     try {
       session = JSON.parse(atob(sessionCookie.split('=')[1]));
     } catch (e) {
+      console.error('Session parse error:', e);
       return new Response(JSON.stringify({ error: 'Invalid session' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' }
@@ -37,72 +50,49 @@ export async function onRequestGet(context) {
       });
     }
     
-    // 获取用户积分信息
-    let credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
-    
-    if (!credits) {
-      await env.DB.prepare('INSERT INTO user_credits (user_id, balance, total_purchased, total_used, bonus_received) VALUES (?, 0, 0, 0, 0)').bind(userId).run();
-      credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
-    }
-    
-    // 获取订阅信息 - 多重检查
+    // 尝试数据库操作，失败时返回默认值
+    let credits = { balance: 0, total_used: 0, total_purchased: 0, bonus_received: 0 };
     let subscription = null;
-    if (env.DB) {
-      try {
-        // 方法1: 直接查询 subscriptions 表
-        subscription = await env.DB.prepare(`
-          SELECT * FROM subscriptions 
-          WHERE user_id = ?
-          ORDER BY created_at DESC LIMIT 1
-        `).bind(userId).first();
+    let dailyUsageCount = 0;
+    
+    try {
+      if (env.DB) {
+        // 获取用户积分信息
+        const creditsResult = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
         
-        // 方法2: 如果表不存在或没记录，检查积分交易记录
-        if (!subscription) {
-          const subTransactions = await env.DB.prepare(`
-            SELECT * FROM credit_transactions 
-            WHERE user_id = ? AND description LIKE '%Subscribe%'
+        if (creditsResult) {
+          credits = creditsResult;
+        } else {
+          // 初始化用户积分
+          await env.DB.prepare('INSERT OR IGNORE INTO user_credits (user_id, balance, total_purchased, total_used, bonus_received) VALUES (?, 0, 0, 0, 0)').bind(userId).run();
+        }
+        
+        // 获取订阅信息
+        try {
+          subscription = await env.DB.prepare(`
+            SELECT * FROM subscriptions 
+            WHERE user_id = ?
             ORDER BY created_at DESC LIMIT 1
           `).bind(userId).first();
-          
-          if (subTransactions) {
-            // 从描述中判断订阅类型
-            const isYearly = subTransactions.description.toLowerCase().includes('yearly') || subTransactions.amount >= 100;
-            subscription = {
-              plan: isYearly ? 'yearly' : 'monthly',
-              status: 'active',
-              creditsGranted: subTransactions.amount,
-              currentPeriodEnd: new Date(Date.now() + (isYearly ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString()
-            };
-          }
+        } catch (e) {
+          console.log('Subscription query error:', e.message);
         }
         
-        // 方法3: 根据积分判断是否有订阅（订阅 yearly 送 100，monthly 送 20）
-        if (!subscription && credits.bonus_received >= 100) {
-          subscription = {
-            plan: 'yearly',
-            status: 'active',
-            creditsGranted: credits.bonus_received,
-            currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
-          };
-        } else if (!subscription && credits.bonus_received >= 20) {
-          subscription = {
-            plan: 'monthly',
-            status: 'active',
-            creditsGranted: credits.bonus_received,
-            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-          };
+        // 获取今日使用次数
+        const today = new Date().toISOString().split('T')[0];
+        const dailyUsageResult = await env.DB.prepare(`
+          SELECT count FROM daily_usage 
+          WHERE user_id = ? AND usage_date = ?
+        `).bind(userId, today).first();
+        
+        if (dailyUsageResult) {
+          dailyUsageCount = dailyUsageResult.count;
         }
-      } catch (e) {
-        console.log('Subscription query error:', e.message);
       }
+    } catch (dbErr) {
+      console.error('Database error:', dbErr);
+      // 数据库错误不阻塞，返回默认值
     }
-    
-    // 获取今日使用次数
-    const today = new Date().toISOString().split('T')[0];
-    const dailyUsage = await env.DB.prepare(`
-      SELECT count FROM daily_usage 
-      WHERE user_id = ? AND usage_date = ?
-    `).bind(userId, today).first();
     
     return new Response(JSON.stringify({
       user: {
@@ -112,18 +102,18 @@ export async function onRequestGet(context) {
         image: session.user.image
       },
       credits: {
-        balance: credits.balance,
-        totalUsed: credits.total_used,
-        totalPurchased: credits.total_purchased,
-        bonusReceived: credits.bonus_received
+        balance: credits.balance || 0,
+        totalUsed: credits.total_used || 0,
+        totalPurchased: credits.total_purchased || 0,
+        bonusReceived: credits.bonus_received || 0
       },
       subscription: subscription ? {
         plan: subscription.plan,
         status: subscription.status,
-        creditsGranted: subscription.creditsGranted || subscription.credits_granted,
+        creditsGranted: subscription.creditsGranted || subscription.credits_granted || 0,
         currentPeriodEnd: subscription.currentPeriodEnd || subscription.current_period_end
       } : null,
-      dailyUsage: dailyUsage ? dailyUsage.count : 0,
+      dailyUsage: dailyUsageCount,
       pricing: {
         starter: { name: '入门版', price: 9, credits: 50 },
         pro: { name: '专业版', price: 39, credits: 400 },
@@ -136,7 +126,7 @@ export async function onRequestGet(context) {
     
   } catch (error) {
     console.error('User info error:', error);
-    return new Response(JSON.stringify({ error: 'Server error' }), {
+    return new Response(JSON.stringify({ error: 'Server error', message: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
