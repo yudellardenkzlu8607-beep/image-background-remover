@@ -17,10 +17,18 @@ globalThis.atob = globalThis.atob || atobPolyfill;
 
 // Credit packages - 确保和 create-order.js 以及前端完全一致！
 const CREDIT_PACKAGES = {
-  starter: { name: 'Starter', credits: 50, price: '5.00' },
-  professional: { name: 'Professional', credits: 200, price: '15.00' },
-  enterprise: { name: 'Enterprise', credits: 500, price: '39.00' },
+  starter: { name: 'Starter', credits: 50, price: 5 },
+  professional: { name: 'Professional', credits: 200, price: 15 },
+  enterprise: { name: 'Enterprise', credits: 500, price: 39 },
 };
+
+// 根据价格反推套餐（备用方案）
+function getPackageByPrice(priceStr) {
+  const price = parseFloat(priceStr);
+  if (price >= 35) return CREDIT_PACKAGES.enterprise;
+  if (price >= 12) return CREDIT_PACKAGES.professional;
+  return CREDIT_PACKAGES.starter;
+}
 
 const PAYPAL_CONFIG = {
   clientId: 'Aeo2PFuZgfEdi3ya3lf8h5lgdxZw3_ex3cZJAuTCyFjl_HWHuV5F86ov4rZcWS_Q-5Cd58cfU9iP32b0',
@@ -81,8 +89,8 @@ export async function onRequestPost(context) {
 
     // Capture the PayPal order
     const accessToken = await getAccessToken();
-    const captureResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v2/checkout/orders/${token}/capture`, {
-      method: 'POST',
+    const captureResponse = await fetch(`${PAYPAL_CONFIG.baseUrl}/v2/checkout/orders/${token}`, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
@@ -91,29 +99,60 @@ export async function onRequestPost(context) {
 
     if (!captureResponse.ok) {
       const error = await captureResponse.text();
-      return new Response(JSON.stringify({ error: `Capture failed: ${error}`, success: false }), {
+      return new Response(JSON.stringify({ error: `Get order failed: ${error}`, success: false }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const captureData = await captureResponse.json();
+    const orderData = await captureResponse.json();
     
-    // Check if payment is completed
-    if (captureData.status === 'COMPLETED') {
-      // Get package info from custom_id if available
-      let packageId = 'starter';
-      if (captureData.purchase_units && captureData.purchase_units[0]) {
+    // 先尝试从 custom_id 获取套餐信息
+    let packageId = 'starter';
+    let pkg = CREDIT_PACKAGES.starter;
+    
+    if (orderData.purchase_units && orderData.purchase_units[0]) {
+      try {
+        const customData = JSON.parse(orderData.purchase_units[0].custom_id || '{}');
+        if (customData.packageId && CREDIT_PACKAGES[customData.packageId]) {
+          packageId = customData.packageId;
+          pkg = CREDIT_PACKAGES[packageId];
+        }
+      } catch (e) {
+        console.log('Failed to parse custom_id, fallback to price detection');
+      }
+      
+      // 备用方案：从订单金额反推
+      if (!pkg || pkg.credits === 50) {
         try {
-          const customData = JSON.parse(captureData.purchase_units[0].custom_id || '{}');
-          packageId = customData.packageId || 'starter';
+          const amount = orderData.purchase_units[0].amount?.value;
+          if (amount) {
+            const priceBasedPkg = getPackageByPrice(amount);
+            if (priceBasedPkg.credits > pkg.credits) {
+              pkg = priceBasedPkg;
+              console.log(`Using price-based package: ${priceBasedPkg.name} (${priceBasedPkg.credits} credits)`);
+            }
+          }
         } catch (e) {
-          packageId = 'starter';
+          console.log('Failed to detect package from price');
         }
       }
+    }
 
-      const pkg = CREDIT_PACKAGES[packageId] || CREDIT_PACKAGES.starter;
+    // 双重检查：如果还是 50，再从订单描述或金额确认
+    if (pkg.credits === 50) {
+      const amount = orderData.purchase_units?.[0]?.amount?.value;
+      if (amount && parseFloat(amount) >= 14) {
+        pkg = CREDIT_PACKAGES.professional;
+        console.log('Overriding to Professional package based on amount >=14');
+      } else if (amount && parseFloat(amount) >= 35) {
+        pkg = CREDIT_PACKAGES.enterprise;
+        console.log('Overriding to Enterprise package based on amount >=35');
+      }
+    }
 
+    // Check if payment is completed
+    if (orderData.status === 'COMPLETED' || orderData.status === 'APPROVED') {
       // Add credits to user account
       if (env.DB) {
         let credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();
