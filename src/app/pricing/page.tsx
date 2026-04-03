@@ -142,7 +142,17 @@ export default function Pricing() {
       window.location.href = '/api/auth/signin/google';
       return;
     }
-    setSelectedItem({ ...item, type });
+    
+    // 订阅：直接根据 billingCycle 选择正确的套餐
+    if (type === 'subscription') {
+      const selectedPlan = billingCycle === 'yearly' 
+        ? { id: 'yearly', name: 'Yearly', price: 69, period: 'year' }
+        : { id: 'monthly', name: 'Monthly', price: 10, period: 'month' };
+      setSelectedItem({ ...selectedPlan, type: 'subscription' });
+    } else {
+      setSelectedItem({ ...item, type });
+    }
+    
     setShowCheckout(true);
   };
 
@@ -162,6 +172,10 @@ export default function Pricing() {
         body.type = 'subscription';
         body.planId = selectedItem.id; // 直接用 selectedItem.id，已经在 handleGetStarted 里设置好了
       }
+      
+      // 调试日志
+      console.log('Checkout body:', body);
+      console.log('selectedItem:', selectedItem);
 
       // Use create-order for both credits and subscription
       const response = await fetch('/api/payment/create-order', {
