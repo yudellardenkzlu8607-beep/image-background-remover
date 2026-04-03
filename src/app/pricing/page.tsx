@@ -160,9 +160,7 @@ export default function Pricing() {
         body.packageId = selectedItem.id;
       } else {
         body.type = 'subscription';
-        body.planId = selectedItem.id === 'yearly' || selectedItem.id === 'monthly' 
-          ? (billingCycle === 'yearly' ? 'yearly' : 'monthly')
-          : selectedItem.id;
+        body.planId = selectedItem.id; // 直接用 selectedItem.id，已经在 handleGetStarted 里设置好了
       }
 
       // Use create-order for both credits and subscription
