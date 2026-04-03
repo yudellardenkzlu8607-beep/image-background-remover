@@ -79,7 +79,7 @@ export async function onRequestPost(context) {
         INSERT OR REPLACE INTO subscriptions 
         (user_id, plan, status, credits_granted, current_period_start, current_period_end, updated_at)
         VALUES (?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP)
-      `).bind(userId, planId, plan.credits, currentPeriodStart, currentPeriodEnd);
+      `).bind(userId, planId, plan.credits, currentPeriodStart, currentPeriodEnd).run();
       
       console.log('Subscription inserted, checking...');
       const checkSub = await env.DB.prepare('SELECT * FROM subscriptions WHERE user_id = ?').bind(userId).first();
