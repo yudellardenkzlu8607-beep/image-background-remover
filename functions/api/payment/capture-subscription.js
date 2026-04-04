@@ -48,7 +48,6 @@ export async function onRequestPost(context) {
     // Calculate subscription period
     const now = new Date();
     const currentPeriodStart = now.toISOString();
-    const currentPeriodEnd = new Date(now.getTime() + plan.period * 24 * 60 * 60 * 1000).toISOString();
 
     // Bonus credits for subscribing
     const bonusCredits = planId === 'yearly' ? 100 : 20;
@@ -59,7 +58,8 @@ export async function onRequestPost(context) {
       try {
         await env.DB.prepare(`
           CREATE TABLE IF NOT EXISTS subscriptions (
-            user_id TEXT PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
             plan TEXT NOT NULL,
             status TEXT DEFAULT 'active',
             credits_granted INTEGER DEFAULT 0,
@@ -73,40 +73,36 @@ export async function onRequestPost(context) {
         console.log('Table might already exist:', e.message);
       }
 
-      // Check if user already has an active subscription
-      const existingSub = await env.DB.prepare('SELECT * FROM subscriptions WHERE user_id = ?').bind(userId).first();
+      // Get all active subscriptions for this user
+      const allSubs = await env.DB.prepare('SELECT * FROM subscriptions WHERE user_id = ? AND status = ?').bind(userId, 'active').all();
       
-      let finalPeriodEnd;
-      if (existingSub && existingSub.status === 'active') {
-        // Time累加：在现有订阅结束时间基础上延长
-        const existingEnd = new Date(existingSub.current_period_end);
-        const now = new Date();
-        // 如果订阅已经过期，从现在开始算；如果还没过期，从到期时间开始算
-        const startFrom = existingEnd > now ? existingEnd : now;
-        finalPeriodEnd = new Date(startFrom.getTime() + plan.period * 24 * 60 * 60 * 1000).toISOString();
-        console.log('Extending existing subscription from', existingEnd, 'to', finalPeriodEnd);
-        
-        // Update existing subscription
-        await env.DB.prepare(`
-          UPDATE subscriptions 
-          SET plan = ?, 
-              current_period_end = ?, 
-              updated_at = CURRENT_TIMESTAMP
-          WHERE user_id = ?
-        `).bind(planId, finalPeriodEnd, userId).run();
-      } else {
-        // No active subscription, create new one
-        finalPeriodEnd = currentPeriodEnd;
-        console.log('Creating new subscription for user:', userId, 'plan:', planId);
-        await env.DB.prepare(`
-          INSERT OR REPLACE INTO subscriptions 
-          (user_id, plan, status, credits_granted, current_period_start, current_period_end, updated_at)
-          VALUES (?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP)
-        `).bind(userId, planId, plan.credits, currentPeriodStart, currentPeriodEnd).run();
+      // 计算最晚的到期时间
+      let latestEnd = new Date();
+      if (allSubs && allSubs.length > 0) {
+        for (const sub of allSubs) {
+          const subEnd = new Date(sub.current_period_end);
+          if (subEnd > latestEnd) {
+            latestEnd = subEnd;
+          }
+        }
+      }
       
-      console.log('Subscription inserted, checking...');
-      const checkSub = await env.DB.prepare('SELECT * FROM subscriptions WHERE user_id = ?').bind(userId).first();
-      console.log('Subscription check result:', checkSub);
+      // 在最晚到期时间基础上累加
+      const newPeriodEnd = new Date(latestEnd.getTime() + plan.period * 24 * 60 * 60 * 1000).toISOString();
+      
+      console.log('Creating new subscription record for user:', userId, 'plan:', planId);
+      console.log('Latest existing end:', latestEnd, 'New end:', newPeriodEnd);
+      
+      // 插入新的订阅记录（保留所有历史）
+      await env.DB.prepare(`
+        INSERT INTO subscriptions 
+        (user_id, plan, status, credits_granted, current_period_start, current_period_end, updated_at)
+        VALUES (?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP)
+      `).bind(userId, planId, plan.credits, currentPeriodStart, newPeriodEnd).run();
+      
+      console.log('New subscription inserted, checking all subscriptions...');
+      const checkAllSubs = await env.DB.prepare('SELECT * FROM subscriptions WHERE user_id = ?').bind(userId).all();
+      console.log('All subscriptions for user:', checkAllSubs);
 
       // Give bonus credits for subscribing
       let credits = await env.DB.prepare('SELECT * FROM user_credits WHERE user_id = ?').bind(userId).first();

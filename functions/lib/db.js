@@ -210,16 +210,38 @@ export async function getCreditTransactions(db, userId, limit = 20) {
   return results.results;
 }
 
-// 获取订阅信息
+// 获取订阅信息（计算所有活跃订阅的总到期时间）
 export async function getUserSubscription(db, userId) {
-  const subscription = await db.prepare(`
+  const allSubscriptions = await db.prepare(`
     SELECT * FROM subscriptions 
     WHERE user_id = ? AND status = 'active'
     ORDER BY created_at DESC
-    LIMIT 1
-  `).bind(userId).first();
+  `).bind(userId).all();
   
-  return subscription;
+  const subs = allSubscriptions.results || allSubscriptions;
+  
+  if (!subs || subs.length === 0) {
+    return null;
+  }
+  
+  // 找到最晚的到期时间
+  let latestEnd = new Date(0);
+  let latestSub = subs[0];
+  
+  for (const sub of subs) {
+    const subEnd = new Date(sub.current_period_end);
+    if (subEnd > latestEnd) {
+      latestEnd = subEnd;
+      latestSub = sub;
+    }
+  }
+  
+  // 返回最新的订阅记录，但使用最晚的到期时间
+  return {
+    ...latestSub,
+    current_period_end: latestEnd.toISOString(),
+    total_subscriptions: subs.length
+  };
 }
 
 // 记录每日使用
