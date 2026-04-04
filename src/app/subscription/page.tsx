@@ -223,112 +223,7 @@ export default function Subscription() {
           </div>
         </div>
 
-        {/* Two Column Layout: Credit Purchase Records + Subscription Records */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '24px' }}>
-          {/* Left Column: Credit Purchase Records */}
-          <div>
-            {purchaseTransactions.length > 0 && (
-              <div style={{ backgroundColor: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '12px', padding: '24px', height: '100%' }}>
-                <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#92400e', marginBottom: '16px' }}>
-                  💰 积分购买记录 ({purchaseTransactions.length} 笔)
-                </h2>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto' }}>
-                  {purchaseTransactions.map((tx, index) => (
-                    <div 
-                      key={tx.id || index}
-                      style={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #fef3c7', 
-                        borderRadius: '8px', 
-                        padding: '16px',
-                        flexShrink: 0
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                        <div>
-                          <p style={{ fontSize: '14px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                            {tx.description || getTransactionTypeLabel(tx.type)}
-                          </p>
-                          <p style={{ fontSize: '12px', color: '#6b7280' }}>
-                            时间: {formatDate(tx.created_at)}
-                          </p>
-                        </div>
-                        <span style={{ 
-                          backgroundColor: tx.amount >= 0 ? '#dcfce7' : '#fee2e2', 
-                          color: tx.amount >= 0 ? '#166534' : '#991b1b', 
-                          padding: '6px 12px', 
-                          borderRadius: '6px', 
-                          fontSize: '14px', 
-                          fontWeight: '600',
-                          flexShrink: 0
-                        }}>
-                          {tx.amount >= 0 ? '+' : ''}{tx.amount}
-                        </span>
-                      </div>
-                      
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                        <p style={{ fontSize: '12px', color: '#6b7280' }}>
-                          变动后余额: <span style={{ fontWeight: '600', color: '#111827' }}>{tx.balance_after}</span>
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
 
-          {/* Right Column: Subscription Records */}
-          <div>
-            {allSubscriptions.length > 0 && (
-              <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '24px', height: '100%' }}>
-                <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
-                  📋 订阅记录 ({allSubscriptions.length} 笔)
-                </h2>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto' }}>
-                  {allSubscriptions.map((sub, index) => (
-                    <div 
-                      key={sub.id || index}
-                      style={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #bfdbfe', 
-                        borderRadius: '8px', 
-                        padding: '16px',
-                        flexShrink: 0
-                      }}
-                    >
-                      <div style={{ marginBottom: '8px' }}>
-                        <p style={{ fontSize: '14px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                          {getPlanName(sub.plan)}
-                        </p>
-                        <p style={{ fontSize: '12px', color: '#6b7280' }}>
-                          订阅时间: {formatDate(sub.created_at)}
-                        </p>
-                      </div>
-                      
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                        <div>
-                          <p style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '2px' }}>开始时间</p>
-                          <p style={{ fontSize: '12px', color: '#374151' }}>
-                            {formatDate(sub.current_period_start)}
-                          </p>
-                        </div>
-                        <div>
-                          <p style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '2px' }}>到期时间</p>
-                          <p style={{ fontSize: '12px', color: '#374151' }}>
-                            {formatDate(sub.current_period_end)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Actions */}
         {hasSubscription && (
@@ -349,14 +244,10 @@ export default function Subscription() {
         )}
 
         {/* Quick Links */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
           <Link href="/pricing" style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', textAlign: 'center', textDecoration: 'none' }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>💳</div>
-            <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Buy Credits</div>
-          </Link>
-          <Link href="/pricing" style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', textAlign: 'center', textDecoration: 'none' }}>
-            <div style={{ fontSize: '24px', marginBottom: '8px' }}>📋</div>
-            <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Subscribe</div>
+            <div style={{ fontSize: '24px', marginBottom: '8px' }}>🛒</div>
+            <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Buy Credits / Subscribe</div>
           </Link>
           <Link href="/profile" style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', textAlign: 'center', textDecoration: 'none' }}>
             <div style={{ fontSize: '24px', marginBottom: '8px' }}>📊</div>
