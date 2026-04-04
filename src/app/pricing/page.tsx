@@ -159,15 +159,8 @@ export default function Pricing() {
       return;
     }
     
-    // 订阅：直接根据 billingCycle 选择正确的套餐
-    if (type === 'subscription') {
-      const selectedPlan = billingCycle === 'yearly' 
-        ? { id: 'yearly', name: 'Yearly', price: 69, period: 'year' }
-        : { id: 'monthly', name: 'Monthly', price: 10, period: 'month' };
-      setSelectedItem({ ...selectedPlan, type: 'subscription' });
-    } else {
-      setSelectedItem({ ...item, type });
-    }
+    // 直接使用传入的 item（因为每个按钮已经传了正确的套餐信息）
+    setSelectedItem({ ...item, type });
     
     setShowCheckout(true);
   };
@@ -370,8 +363,8 @@ export default function Pricing() {
             {/* Monthly Plan */}
             <div style={{
               borderRadius: '12px', padding: '24px',
-              border: billingCycle === 'monthly' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-              backgroundColor: billingCycle === 'monthly' ? '#eff6ff' : 'white',
+              border: '1px solid #e5e7eb',
+              backgroundColor: 'white',
               position: 'relative'
             }}>
               <div style={{ marginBottom: '16px', textAlign: 'center' }}>
@@ -396,9 +389,9 @@ export default function Pricing() {
                 style={{
                   width: '100%', padding: '10px', borderRadius: '8px',
                   fontWeight: '500', fontSize: '14px',
-                  backgroundColor: billingCycle === 'monthly' ? '#2563eb' : '#f9fafb',
-                  color: billingCycle === 'monthly' ? 'white' : '#374151',
-                  border: billingCycle === 'monthly' ? 'none' : '1px solid #d1d5db',
+                  backgroundColor: '#2563eb',
+                  color: 'white',
+                  border: 'none',
                   cursor: 'pointer'
                 }}
               >
@@ -409,8 +402,8 @@ export default function Pricing() {
             {/* Yearly Plan */}
             <div style={{
               borderRadius: '12px', padding: '24px',
-              border: billingCycle === 'yearly' ? '2px solid #2563eb' : '1px solid #e5e7eb',
-              backgroundColor: billingCycle === 'yearly' ? '#eff6ff' : 'white',
+              border: '1px solid #e5e7eb',
+              backgroundColor: 'white',
               position: 'relative'
             }}>
               <div style={{
@@ -443,9 +436,9 @@ export default function Pricing() {
                 style={{
                   width: '100%', padding: '10px', borderRadius: '8px',
                   fontWeight: '500', fontSize: '14px',
-                  backgroundColor: billingCycle === 'yearly' ? '#2563eb' : '#f9fafb',
-                  color: billingCycle === 'yearly' ? 'white' : '#374151',
-                  border: billingCycle === 'yearly' ? 'none' : '1px solid #d1d5db',
+                  backgroundColor: '#2563eb',
+                  color: 'white',
+                  border: 'none',
                   cursor: 'pointer'
                 }}
               >
