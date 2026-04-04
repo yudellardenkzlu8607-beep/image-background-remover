@@ -267,19 +267,7 @@ export default function Subscription() {
                         </span>
                       </div>
                       
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <span style={{ 
-                            fontSize: '11px', 
-                            color: 'white', 
-                            backgroundColor: getTransactionTypeColor(tx.type),
-                            padding: '2px 8px', 
-                            borderRadius: '9999px',
-                            fontWeight: '500'
-                          }}>
-                            {getTransactionTypeLabel(tx.type)}
-                          </span>
-                        </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <p style={{ fontSize: '12px', color: '#6b7280' }}>
                           变动后余额: <span style={{ fontWeight: '600', color: '#111827' }}>{tx.balance_after}</span>
                         </p>
