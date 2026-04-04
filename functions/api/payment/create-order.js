@@ -41,9 +41,9 @@ globalThis.btoa = base64Encode;
 
 // PayPal API config
 const PAYPAL_CONFIG = {
-  clientId: 'Aeo2PFuZgfEdi3ya3lf8h5lgdxZw3_ex3cZJAuTCyFjl_HWHuV5F86ov4rZcWS_Q-5Cd58cfU9iP32b0',
-  clientSecret: 'EJjM46c5uz477zrf1YIxG2eqA0vPgJZN6QA_oEkucqJASdjETRWtxpCsZQ9ittHETkAdRRTtkPX0Lmui',
-  baseUrl: 'https://api-m.sandbox.paypal.com',
+  clientId: 'AWQO2Az3pdZ5JpkcA7J8Rfgy8Tu8Vz9uyH31FrFohUU1uZbbRbUPTuPsRSxbo7Wmo_WwiTxHoOzzu6AL',
+  clientSecret: 'EFKlq9U89R6PzV_I4Ix34Jv0iXMUIh6u8F4-R-53wTJNqgWQzncUE-m3ADbX2ZwTQBR1kkJdBSvnerUW',
+  baseUrl: 'https://api-m.paypal.com',
 };
 
 // Subscription plans
