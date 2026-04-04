@@ -8,6 +8,7 @@ export default function Subscription() {
   const [credits, setCredits] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
   const [allSubscriptions, setAllSubscriptions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -23,11 +24,13 @@ export default function Subscription() {
         if (data?.user?.id) {
           Promise.all([
             fetch('/api/user/info').then(res => res.json()),
-            fetch('/api/user/subscriptions').then(res => res.json())
-          ]).then(([userData, subscriptionsData]) => {
+            fetch('/api/user/subscriptions').then(res => res.json()),
+            fetch('/api/user/transactions').then(res => res.json())
+          ]).then(([userData, subscriptionsData, transactionsData]) => {
             setCredits(userData.credits);
             setSubscription(userData.subscription);
             setAllSubscriptions(subscriptionsData.subscriptions || []);
+            setTransactions(transactionsData.transactions || []);
             setLoading(false);
           });
         } else {
@@ -60,6 +63,28 @@ export default function Subscription() {
     return plan;
   };
 
+  const getTransactionTypeLabel = (type: string) => {
+    switch (type) {
+      case 'purchase': return '购买';
+      case 'usage': return '使用';
+      case 'bonus': return '奖励';
+      case 'refund': return '退款';
+      case 'daily_bonus': return '每日奖励';
+      default: return type;
+    }
+  };
+
+  const getTransactionTypeColor = (type: string) => {
+    switch (type) {
+      case 'purchase': return '#2563eb';
+      case 'usage': return '#dc2626';
+      case 'bonus': return '#16a34a';
+      case 'refund': return '#0891b2';
+      case 'daily_bonus': return '#ca8a04';
+      default: return '#6b7280';
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -83,6 +108,7 @@ export default function Subscription() {
   }
 
   const hasSubscription = subscription && subscription.status === 'active';
+  const purchaseTransactions = transactions.filter(t => t.type === 'purchase' || t.type === 'bonus');
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
@@ -190,10 +216,72 @@ export default function Subscription() {
           </div>
         )}
 
+        {/* Credit Purchase Records */}
+        {purchaseTransactions.length > 0 && (
+          <div style={{ backgroundColor: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#92400e', marginBottom: '16px' }}>
+              💰 积分购买记录 ({purchaseTransactions.length} 笔)
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {purchaseTransactions.map((tx, index) => (
+                <div 
+                  key={tx.id || index}
+                  style={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #fef3c7', 
+                    borderRadius: '8px', 
+                    padding: '16px' 
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
+                        {tx.description || getTransactionTypeLabel(tx.type)}
+                      </p>
+                      <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                        时间: {formatDate(tx.created_at)}
+                      </p>
+                    </div>
+                    <span style={{ 
+                      backgroundColor: tx.amount >= 0 ? '#dcfce7' : '#fee2e2', 
+                      color: tx.amount >= 0 ? '#166534' : '#991b1b', 
+                      padding: '6px 12px', 
+                      borderRadius: '6px', 
+                      fontSize: '14px', 
+                      fontWeight: '600' 
+                    }}>
+                      {tx.amount >= 0 ? '+' : ''}{tx.amount}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ 
+                        fontSize: '11px', 
+                        color: 'white', 
+                        backgroundColor: getTransactionTypeColor(tx.type),
+                        padding: '2px 8px', 
+                        borderRadius: '9999px',
+                        fontWeight: '500'
+                      }}>
+                        {getTransactionTypeLabel(tx.type)}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                      变动后余额: <span style={{ fontWeight: '600', color: '#111827' }}>{tx.balance_after}</span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* All Subscriptions List */}
         {allSubscriptions.length > 0 && (
-          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>
+          <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#1e40af', marginBottom: '16px' }}>
               📋 订阅记录 ({allSubscriptions.length} 笔)
             </h2>
             
@@ -203,7 +291,7 @@ export default function Subscription() {
                   key={sub.id || index}
                   style={{ 
                     backgroundColor: 'white', 
-                    border: '1px solid #e5e7eb', 
+                    border: '1px solid #bfdbfe', 
                     borderRadius: '8px', 
                     padding: '16px' 
                   }}
