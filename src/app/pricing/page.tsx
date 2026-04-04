@@ -309,12 +309,27 @@ export default function Pricing() {
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Buy Credits</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             {creditPackages.map((pkg) => (
-              <div key={pkg.id} style={{
-                borderRadius: '12px', padding: '24px',
-                border: pkg.popular ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                backgroundColor: pkg.popular ? '#eff6ff' : 'white',
-                position: 'relative'
-              }}>
+              <div 
+                key={pkg.id} 
+                style={{
+                  borderRadius: '12px', padding: '24px',
+                  border: pkg.popular ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                  backgroundColor: pkg.popular ? '#eff6ff' : 'white',
+                  position: 'relative',
+                  transition: 'all 0.2s',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.borderColor = '#2563eb';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.borderColor = pkg.popular ? '#2563eb' : '#e5e7eb';
+                }}
+              >
                 {pkg.popular && (
                   <div style={{
                     position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
@@ -361,12 +376,26 @@ export default function Pricing() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
             {/* Monthly Plan */}
-            <div style={{
-              borderRadius: '12px', padding: '24px',
-              border: '1px solid #e5e7eb',
-              backgroundColor: 'white',
-              position: 'relative'
-            }}>
+            <div 
+              style={{
+                borderRadius: '12px', padding: '24px',
+                border: '1px solid #e5e7eb',
+                backgroundColor: 'white',
+                position: 'relative',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+                e.currentTarget.style.borderColor = '#2563eb';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+              }}
+            >
               <div style={{ marginBottom: '16px', textAlign: 'center' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>Monthly</h3>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px' }}>
@@ -400,12 +429,26 @@ export default function Pricing() {
             </div>
 
             {/* Yearly Plan */}
-            <div style={{
-              borderRadius: '12px', padding: '24px',
-              border: '1px solid #e5e7eb',
-              backgroundColor: 'white',
-              position: 'relative'
-            }}>
+            <div 
+              style={{
+                borderRadius: '12px', padding: '24px',
+                border: '1px solid #e5e7eb',
+                backgroundColor: 'white',
+                position: 'relative',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+                e.currentTarget.style.borderColor = '#2563eb';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+              }}
+            >
               <div style={{
                 position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)',
                 backgroundColor: '#16a34a', color: 'white', padding: '2px 12px',
