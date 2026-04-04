@@ -114,7 +114,7 @@ export default function Subscription() {
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       {/* Header */}
       <header style={{ borderBottom: '1px solid #e5e7eb', padding: '16px 0' }}>
-        <div style={{ maxWidth: '768px', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <Link href="/" style={{ color: '#6b7280', textDecoration: 'none', fontSize: '14px' }}>← Back</Link>
             <h1 style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>My Account</h1>
@@ -138,87 +138,94 @@ export default function Subscription() {
       </header>
 
       {/* Main Content */}
-      <div style={{ maxWidth: '768px', margin: '0 auto', padding: '48px 24px' }}>
-        {/* Credits Section */}
-        <div style={{ backgroundColor: hasSubscription ? '#f0fdf4' : '#eff6ff', border: `1px solid ${hasSubscription ? '#bbf7d0' : '#bfdbfe'}`, borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Credits</h2>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-            <div>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Balance</p>
-              <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.balance || 0}</p>
-            </div>
-            <div>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Used</p>
-              <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.totalUsed || 0}</p>
-            </div>
-            <div>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Purchased</p>
-              <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.totalPurchased || 0}</p>
-            </div>
-            <div>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Bonus</p>
-              <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.bonusReceived || 0}</p>
+      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '48px 24px' }}>
+        {/* Two Column Layout: Credits Summary + Subscription Summary */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '24px' }}>
+          {/* Left Column: Credits Summary */}
+          <div>
+            <div style={{ backgroundColor: hasSubscription ? '#f0fdf4' : '#eff6ff', border: `1px solid ${hasSubscription ? '#bbf7d0' : '#bfdbfe'}`, borderRadius: '12px', padding: '24px', height: '100%' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>💰 Credits</h2>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Balance</p>
+                  <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.balance || 0}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Used</p>
+                  <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.totalUsed || 0}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Purchased</p>
+                  <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.totalPurchased || 0}</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Bonus</p>
+                  <p style={{ fontSize: '24px', fontWeight: '600', color: '#111827' }}>{credits?.bonusReceived || 0}</p>
+                </div>
+              </div>
+              
+              {hasSubscription && (
+                <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: '#22c55e', fontSize: '16px' }}>✓</span>
+                  <span style={{ fontSize: '14px', color: '#374151' }}>Unlimited mode active</span>
+                </div>
+              )}
             </div>
           </div>
-          
-          {hasSubscription && (
-            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'white', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#22c55e', fontSize: '16px' }}>✓</span>
-              <span style={{ fontSize: '14px', color: '#374151' }}>Unlimited mode active</span>
-            </div>
-          )}
+
+          {/* Right Column: Subscription Summary */}
+          <div>
+            {hasSubscription ? (
+              <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '24px', height: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
+                      Pro {subscription.plan === 'yearly' ? 'Yearly' : 'Monthly'}
+                    </h2>
+                    <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                      {subscription.plan === 'yearly' ? '$69/year' : '$10/month'}
+                    </p>
+                  </div>
+                  <span style={{ backgroundColor: '#22c55e', color: 'white', padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: '500' }}>
+                    Active
+                  </span>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
+                  <div>
+                    <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Valid until</p>
+                    <p style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>
+                      {subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total subscriptions</p>
+                    <p style={{ fontSize: '18px', fontWeight: '600', color: '#111827' }}>
+                      {subscription.total_subscriptions || allSubscriptions.length} 笔
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '32px', border: '1px solid #e5e7eb', borderRadius: '12px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
+                  No Active Subscription
+                </h2>
+                <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>
+                  Subscribe to Pro for unlimited access with no credits needed.
+                </p>
+                <Link href="/pricing" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: '500' }}>
+                  View Plans
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Subscription Summary Section */}
-        {hasSubscription ? (
-          <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                  Pro {subscription.plan === 'yearly' ? 'Yearly' : 'Monthly'}
-                </h2>
-                <p style={{ fontSize: '14px', color: '#6b7280' }}>
-                  {subscription.plan === 'yearly' ? '$69/year' : '$10/month'}
-                </p>
-              </div>
-              <span style={{ backgroundColor: '#22c55e', color: 'white', padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: '500' }}>
-                Active
-              </span>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-              <div>
-                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Valid until</p>
-                <p style={{ fontSize: '16px', fontWeight: '600', color: '#111827' }}>
-                  {subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
-                </p>
-              </div>
-              <div>
-                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total subscriptions</p>
-                <p style={{ fontSize: '16px', fontWeight: '600', color: '#111827' }}>
-                  {subscription.total_subscriptions || allSubscriptions.length} 笔
-                </p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center', padding: '32px', border: '1px solid #e5e7eb', borderRadius: '12px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
-              No Active Subscription
-            </h2>
-            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>
-              Subscribe to Pro for unlimited access with no credits needed.
-            </p>
-            <Link href="/pricing" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: '500' }}>
-              View Plans
-            </Link>
-          </div>
-        )}
-
-        {/* Two Column Layout: Credit Purchase + Subscriptions */}
+        {/* Two Column Layout: Credit Purchase Records + Subscription Records */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '24px' }}>
-          {/* Credit Purchase Records */}
+          {/* Left Column: Credit Purchase Records */}
           <div>
             {purchaseTransactions.length > 0 && (
               <div style={{ backgroundColor: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '12px', padding: '24px', height: '100%' }}>
@@ -284,7 +291,7 @@ export default function Subscription() {
             )}
           </div>
 
-          {/* All Subscriptions List */}
+          {/* Right Column: Subscription Records */}
           <div>
             {allSubscriptions.length > 0 && (
               <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '24px', height: '100%' }}>
@@ -385,7 +392,7 @@ export default function Subscription() {
 
       {/* Footer */}
       <footer style={{ backgroundColor: '#f9fafb', padding: '24px 0', borderTop: '1px solid #e5e7eb' }}>
-        <div style={{ maxWidth: '768px', margin: '0 auto', textAlign: 'center', fontSize: '12px', color: '#9ca3af' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center', fontSize: '12px', color: '#9ca3af' }}>
           <p>© 2026 Image Background Remover. All rights reserved.</p>
         </div>
       </footer>
