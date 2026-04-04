@@ -7,6 +7,7 @@ export default function Subscription() {
   const [session, setSession] = useState<any>(null);
   const [credits, setCredits] = useState<any>(null);
   const [subscription, setSubscription] = useState<any>(null);
+  const [allSubscriptions, setAllSubscriptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -20,13 +21,15 @@ export default function Subscription() {
       .then(data => {
         setSession(data);
         if (data?.user?.id) {
-          fetch('/api/user/info')
-            .then(res => res.json())
-            .then(userData => {
-              setCredits(userData.credits);
-              setSubscription(userData.subscription);
-              setLoading(false);
-            });
+          Promise.all([
+            fetch('/api/user/info').then(res => res.json()),
+            fetch('/api/user/subscriptions').then(res => res.json())
+          ]).then(([userData, subscriptionsData]) => {
+            setCredits(userData.credits);
+            setSubscription(userData.subscription);
+            setAllSubscriptions(subscriptionsData.subscriptions || []);
+            setLoading(false);
+          });
         } else {
           setLoading(false);
         }
@@ -38,6 +41,23 @@ export default function Subscription() {
     if (confirm('Are you sure you want to cancel your subscription?')) {
       alert('Subscription cancellation coming soon. Please contact support.');
     }
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'N/A';
+    return new Date(dateStr).toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getPlanName = (plan: string) => {
+    if (plan === 'yearly') return 'Pro Yearly ($69/年)';
+    if (plan === 'monthly') return 'Pro Monthly ($10/月)';
+    return plan;
   };
 
   if (loading) {
@@ -124,54 +144,38 @@ export default function Subscription() {
           )}
         </div>
 
-        {/* Subscription Section */}
+        {/* Subscription Summary Section */}
         {hasSubscription ? (
-          <>
-            <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div>
-                  <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                    Pro {subscription.plan === 'yearly' ? 'Yearly' : 'Monthly'}
-                  </h2>
-                  <p style={{ fontSize: '14px', color: '#6b7280' }}>
-                    {subscription.plan === 'yearly' ? '$69/year' : '$10/month'}
-                  </p>
-                </div>
-                <span style={{ backgroundColor: '#22c55e', color: 'white', padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: '500' }}>
-                  Active
-                </span>
+          <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
+                  Pro {subscription.plan === 'yearly' ? 'Yearly' : 'Monthly'}
+                </h2>
+                <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                  {subscription.plan === 'yearly' ? '$69/year' : '$10/month'}
+                </p>
               </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                <div>
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Next billing</p>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>
-                    {subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
-                <div>
-                  <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Status</p>
-                  <p style={{ fontSize: '14px', fontWeight: '500', color: '#111827' }}>Auto-renew</p>
-                </div>
+              <span style={{ backgroundColor: '#22c55e', color: 'white', padding: '4px 12px', borderRadius: '9999px', fontSize: '12px', fontWeight: '500' }}>
+                Active
+              </span>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+              <div>
+                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Valid until</p>
+                <p style={{ fontSize: '16px', fontWeight: '600', color: '#111827' }}>
+                  {subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                </p>
+              </div>
+              <div>
+                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total subscriptions</p>
+                <p style={{ fontSize: '16px', fontWeight: '600', color: '#111827' }}>
+                  {subscription.total_subscriptions || allSubscriptions.length} 笔
+                </p>
               </div>
             </div>
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-              <button
-                style={{ padding: '10px 20px', backgroundColor: '#f9fafb', color: '#374151', border: '1px solid #d1d5db', borderRadius: '8px', fontWeight: '500', cursor: 'pointer' }}
-                onClick={() => alert('Coming soon')}
-              >
-                Update Payment Method
-              </button>
-              <button
-                onClick={handleCancel}
-                style={{ padding: '10px 20px', backgroundColor: 'white', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', fontWeight: '500', cursor: 'pointer' }}
-              >
-                Cancel Subscription
-              </button>
-            </div>
-          </>
+          </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '32px', border: '1px solid #e5e7eb', borderRadius: '12px', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
@@ -183,6 +187,83 @@ export default function Subscription() {
             <Link href="/pricing" style={{ display: 'inline-block', padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', borderRadius: '8px', textDecoration: 'none', fontWeight: '500' }}>
               View Plans
             </Link>
+          </div>
+        )}
+
+        {/* All Subscriptions List */}
+        {allSubscriptions.length > 0 && (
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>
+              📋 订阅记录 ({allSubscriptions.length} 笔)
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {allSubscriptions.map((sub, index) => (
+                <div 
+                  key={sub.id || index}
+                  style={{ 
+                    backgroundColor: 'white', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px', 
+                    padding: '16px' 
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div>
+                      <p style={{ fontSize: '14px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
+                        {getPlanName(sub.plan)}
+                      </p>
+                      <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                        订阅时间: {formatDate(sub.created_at)}
+                      </p>
+                    </div>
+                    <span style={{ 
+                      backgroundColor: sub.status === 'active' ? '#dcfce7' : '#f3f4f6', 
+                      color: sub.status === 'active' ? '#166534' : '#6b7280', 
+                      padding: '4px 10px', 
+                      borderRadius: '9999px', 
+                      fontSize: '11px', 
+                      fontWeight: '500' 
+                    }}>
+                      {sub.status === 'active' ? '有效' : sub.status}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                    <div>
+                      <p style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '2px' }}>开始时间</p>
+                      <p style={{ fontSize: '12px', color: '#374151' }}>
+                        {formatDate(sub.current_period_start)}
+                      </p>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '2px' }}>到期时间</p>
+                      <p style={{ fontSize: '12px', color: '#374151' }}>
+                        {formatDate(sub.current_period_end)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        {hasSubscription && (
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+            <button
+              style={{ padding: '10px 20px', backgroundColor: '#f9fafb', color: '#374151', border: '1px solid #d1d5db', borderRadius: '8px', fontWeight: '500', cursor: 'pointer' }}
+              onClick={() => alert('Coming soon')}
+            >
+              Update Payment Method
+            </button>
+            <button
+              onClick={handleCancel}
+              style={{ padding: '10px 20px', backgroundColor: 'white', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', fontWeight: '500', cursor: 'pointer' }}
+            >
+              Cancel Subscription
+            </button>
           </div>
         )}
 
