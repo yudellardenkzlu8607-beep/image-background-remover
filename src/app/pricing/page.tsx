@@ -364,33 +364,7 @@ export default function Pricing() {
         <div ref={subscriptionRef} id="subscription-anchor" style={{ paddingTop: '20px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px', textAlign: 'center' }}>Or Subscribe for Unlimited</h2>
           
-          {/* Billing Toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '24px' }}>
-            <span style={{ fontSize: '14px', color: billingCycle === 'monthly' ? '#111827' : '#9ca3af', fontWeight: billingCycle === 'monthly' ? '500' : '400' }}>Monthly</span>
-            <button
-              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-              style={{
-                width: '40px', height: '24px', borderRadius: '9999px',
-                backgroundColor: billingCycle === 'yearly' ? '#22c55e' : '#d1d5db',
-                border: 'none', cursor: 'pointer', position: 'relative',
-                transition: 'background-color 0.2s'
-              }}
-            >
-              <span style={{
-                position: 'absolute', top: '2px',
-                left: billingCycle === 'yearly' ? '20px' : '2px',
-                width: '20px', height: '20px', borderRadius: '50%',
-                backgroundColor: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                transition: 'left 0.2s'
-              }} />
-            </button>
-            <span style={{ fontSize: '14px', color: billingCycle === 'yearly' ? '#111827' : '#9ca3af', fontWeight: billingCycle === 'yearly' ? '500' : '400' }}>
-              Pay annually
-              {billingCycle === 'yearly' && (
-                <span style={{ marginLeft: '4px', color: '#16a34a', fontWeight: '500' }}>Save 42%</span>
-              )}
-            </span>
-          </div>
+
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
             {/* Monthly Plan */}
