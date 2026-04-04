@@ -299,26 +299,13 @@ export default function Subscription() {
                         flexShrink: 0
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                        <div>
-                          <p style={{ fontSize: '14px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
-                            {getPlanName(sub.plan)}
-                          </p>
-                          <p style={{ fontSize: '12px', color: '#6b7280' }}>
-                            订阅时间: {formatDate(sub.created_at)}
-                          </p>
-                        </div>
-                        <span style={{ 
-                          backgroundColor: sub.status === 'active' ? '#dcfce7' : '#f3f4f6', 
-                          color: sub.status === 'active' ? '#166534' : '#6b7280', 
-                          padding: '4px 10px', 
-                          borderRadius: '9999px', 
-                          fontSize: '11px', 
-                          fontWeight: '500',
-                          flexShrink: 0
-                        }}>
-                          {sub.status === 'active' ? '有效' : sub.status}
-                        </span>
+                      <div style={{ marginBottom: '8px' }}>
+                        <p style={{ fontSize: '14px', fontWeight: '600', color: '#111827', marginBottom: '4px' }}>
+                          {getPlanName(sub.plan)}
+                        </p>
+                        <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                          订阅时间: {formatDate(sub.created_at)}
+                        </p>
                       </div>
                       
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
