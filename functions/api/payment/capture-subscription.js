@@ -73,13 +73,36 @@ export async function onRequestPost(context) {
         console.log('Table might already exist:', e.message);
       }
 
-      // Insert or update subscription
-      console.log('Inserting subscription for user:', userId, 'plan:', planId);
-      await env.DB.prepare(`
-        INSERT OR REPLACE INTO subscriptions 
-        (user_id, plan, status, credits_granted, current_period_start, current_period_end, updated_at)
-        VALUES (?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP)
-      `).bind(userId, planId, plan.credits, currentPeriodStart, currentPeriodEnd).run();
+      // Check if user already has an active subscription
+      const existingSub = await env.DB.prepare('SELECT * FROM subscriptions WHERE user_id = ?').bind(userId).first();
+      
+      let finalPeriodEnd;
+      if (existingSub && existingSub.status === 'active') {
+        // Time累加：在现有订阅结束时间基础上延长
+        const existingEnd = new Date(existingSub.current_period_end);
+        const now = new Date();
+        // 如果订阅已经过期，从现在开始算；如果还没过期，从到期时间开始算
+        const startFrom = existingEnd > now ? existingEnd : now;
+        finalPeriodEnd = new Date(startFrom.getTime() + plan.period * 24 * 60 * 60 * 1000).toISOString();
+        console.log('Extending existing subscription from', existingEnd, 'to', finalPeriodEnd);
+        
+        // Update existing subscription
+        await env.DB.prepare(`
+          UPDATE subscriptions 
+          SET plan = ?, 
+              current_period_end = ?, 
+              updated_at = CURRENT_TIMESTAMP
+          WHERE user_id = ?
+        `).bind(planId, finalPeriodEnd, userId).run();
+      } else {
+        // No active subscription, create new one
+        finalPeriodEnd = currentPeriodEnd;
+        console.log('Creating new subscription for user:', userId, 'plan:', planId);
+        await env.DB.prepare(`
+          INSERT OR REPLACE INTO subscriptions 
+          (user_id, plan, status, credits_granted, current_period_start, current_period_end, updated_at)
+          VALUES (?, ?, 'active', ?, ?, ?, CURRENT_TIMESTAMP)
+        `).bind(userId, planId, plan.credits, currentPeriodStart, currentPeriodEnd).run();
       
       console.log('Subscription inserted, checking...');
       const checkSub = await env.DB.prepare('SELECT * FROM subscriptions WHERE user_id = ?').bind(userId).first();
