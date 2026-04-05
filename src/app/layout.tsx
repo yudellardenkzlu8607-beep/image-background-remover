@@ -25,11 +25,20 @@ export const metadata: Metadata = {
     siteName: "Image Background Remover",
     locale: "zh_CN",
     type: "website",
+    images: [
+      {
+        url: "https://image-background-remover.space/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Image Background Remover - AI去除图片背景",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Image Background Remover - AI去除图片背景",
     description: "免费在线AI图片背景去除工具，1秒快速去除图片背景，生成高清透明PNG图片。",
+    images: ["https://image-background-remover.space/og-image.png"],
   },
   robots: {
     index: true,
