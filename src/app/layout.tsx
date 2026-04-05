@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Image Background Remover - AI去除图片背景 | 免费在线工具",
-  description: "免费在线AI图片背景去除工具，1秒快速去除图片背景，生成高清透明PNG图片。支持电商、设计、证件照等多种场景，无需注册即可使用。",
-  keywords: ["图片背景去除", "AI去背景", "在线抠图", "transparent background", "background remover", "免费抠图", "证件照换底色"],
+  title: "免费 AI 图片背景去除工具 | 在线抠图生成透明 PNG - Image Background Remover",
+  description: "免费在线AI图片背景去除工具，1秒快速去除图片背景，生成高清透明PNG图片。支持电商、设计、证件照等多种场景，无需注册即可使用，永久免费。",
+  keywords: ["图片背景去除", "AI去背景", "在线抠图", "transparent background", "background remover", "免费抠图", "证件照换底色", "电商图片", "设计工具"],
   openGraph: {
     title: "Image Background Remover - AI去除图片背景",
     description: "免费在线AI图片背景去除工具，1秒快速去除图片背景，生成高清透明PNG图片。",
@@ -25,20 +25,11 @@ export const metadata: Metadata = {
     siteName: "Image Background Remover",
     locale: "zh_CN",
     type: "website",
-    images: [
-      {
-        url: "https://image-background-remover.space/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Image Background Remover - AI去除图片背景",
-      },
-    ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Image Background Remover - AI去除图片背景",
     description: "免费在线AI图片背景去除工具，1秒快速去除图片背景，生成高清透明PNG图片。",
-    images: ["https://image-background-remover.space/og-image.png"],
   },
   robots: {
     index: true,
